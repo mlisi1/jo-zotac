@@ -1,0 +1,37 @@
+services:
+  jo-zotac:
+    build:
+      network: host
+      context: .
+      dockerfile: docker/Dockerfile
+    privileged: true
+    image: jo-zotac
+    stdin_open: true
+    tty: true
+    network_mode: host
+    ipc: host
+    runtime: nvidia
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - /dev/ttyUSB0:/dev/ttyUSB0
+      - /dev/bus/usb:/dev/bus/usb
+      - /dev/input:/dev/input
+      - /dev/dri:/dev/dri
+      - /dev/nvidia0:/dev/nvidia0
+      - /dev/nvidiactl:/dev/nvidiactl
+      - /dev/nvidia-modeset:/dev/nvidia-modeset
+    environment:
+      - DISPLAY
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all,graphics,display,video,utility,compute
+      - __NV_PRIME_RENDER_OFFLOAD=1 
+      - __GLX_VENDOR_LIBRARY_NAME=nvidia
+    group_add:
+      - dialout
