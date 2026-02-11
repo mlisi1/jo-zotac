@@ -1,4 +1,4 @@
-FROM ubuntu:24.04 AS builder
+FROM nvidia/cuda:13.0.0-devel-ubuntu24.04 AS builder
 
 # Install build essentials
 RUN apt update && apt-get install -y \
@@ -38,6 +38,10 @@ RUN git clone https://github.com/koide3/iridescence --recursive \
 RUN git clone https://github.com/koide3/gtsam_points \
     && mkdir gtsam_points/build && cd gtsam_points/build \
     && cmake .. -DCMAKE_BUILD_TYPE=Release \
+    && cmake .. \
+      -DBUILD_WITH_OPENMP=ON \        
+      -DBUILD_WITH_CUDA=ON \           
+      -DCMAKE_BUILD_TYPE=Release \
     && make -j$(nproc) && make install DESTDIR=/gtsam_points-install
 
 
@@ -100,7 +104,7 @@ RUN rosdep update
 RUN cd src/ && git clone https://github.com/ros-drivers/velodyne.git
 
 # IMU
-RUN cd src && git clone --branch ros2 https://github.com/xsenssupport/Xsens_MTi_ROS_Driver_and_Ntrip_Client.git
+RUN cd src && git clone --branch ros2 https://github.com/mlisi1/Xsens_MTi_ROS_Driver_and_Ntrip_Client.git
 
 # GLIM
 RUN cd src && git clone https://github.com/koide3/glim_ros2.git
@@ -120,8 +124,8 @@ RUN source /opt/ros/jazzy/setup.bash \
 COPY docker/entrypoint.sh /entrypoint.sh
 RUN sudo chmod +x /entrypoint.sh
 RUN echo "source /opt/ros/${DISTRO}/setup.bash" >> ~/.bashrc
+RUN echo "source /home/ros/install/setup.bash" >> ~/.bashrc
 RUN echo "source /usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash" >> ~/.bashrc 
 
 
-
-# ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["/entrypoint.sh"]
