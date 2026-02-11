@@ -21,6 +21,7 @@ services:
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - /dev:/dev
+      - ./jo_bringup:/home/ros/src/jo_bringup
       # - /dev/ttyUSB0:/dev/ttyUSB0
       # - /dev/bus/usb:/dev/bus/usb
       # - /dev/input:/dev/input
@@ -36,3 +37,5 @@ services:
       - __GLX_VENDOR_LIBRARY_NAME=nvidia
     group_add:
       - dialout
+
+    command: bash
