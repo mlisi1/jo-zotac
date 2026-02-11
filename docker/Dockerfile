@@ -1,4 +1,52 @@
+FROM ubuntu:24.04 AS builder
+
+# Install build essentials
+RUN apt update && apt-get install -y \
+    build-essential \
+    cmake \
+    git \
+    python3-dev \
+    python3-pip \
+    libglm-dev \ 
+    libglfw3-dev \
+    libpng-dev \
+    libboost-all-dev \
+    libeigen3-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Build GTSAM
+RUN git clone https://github.com/borglab/gtsam -b 4.3a0
+RUN cd gtsam \ 
+    # && git checkout 4.3a0 \ 
+    && mkdir build && cd build \
+    && cmake .. \
+        -DGTSAM_BUILD_EXAMPLES_ALWAYS=OFF \
+        -DGTSAM_BUILD_TESTS=OFF \
+        -DGTSAM_WITH_TBB=OFF \
+        -DGTSAM_BUILD_WITH_MARCH_NATIVE=OFF \
+    && make -j$(nproc) \
+    && make install DESTDIR=/gtsam-install && make install
+
+# Build Iridescence
+RUN git clone https://github.com/koide3/iridescence --recursive \
+    && mkdir iridescence/build && cd iridescence/build \
+    && cmake .. -DCMAKE_BUILD_TYPE=Release \
+    && make -j$(nproc) \ 
+    && make install DESTDIR=/iridescence-install && make install
+
+# Build GTSAM-Points
+RUN git clone https://github.com/koide3/gtsam_points \
+    && mkdir gtsam_points/build && cd gtsam_points/build \
+    && cmake .. -DCMAKE_BUILD_TYPE=Release \
+    && make -j$(nproc) && make install DESTDIR=/gtsam_points-install
+
+
+
 FROM osrf/ros:jazzy-desktop-full
+
+COPY --from=builder /gtsam-install/ /
+COPY --from=builder /iridescence-install/ /
+COPY --from=builder /gtsam_points-install/ /
 
 ENV GZ_VERSION=harmonic
 ARG DISTRO=jazzy
@@ -69,4 +117,4 @@ RUN echo "source /usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash" >> 
 
 
 
-ENTRYPOINT ["/entrypoint.sh"]
+# ENTRYPOINT ["/entrypoint.sh"]
