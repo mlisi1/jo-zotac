@@ -20,13 +20,14 @@ services:
               capabilities: [gpu]
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - /dev/ttyUSB0:/dev/ttyUSB0
-      - /dev/bus/usb:/dev/bus/usb
-      - /dev/input:/dev/input
-      - /dev/dri:/dev/dri
-      - /dev/nvidia0:/dev/nvidia0
-      - /dev/nvidiactl:/dev/nvidiactl
-      - /dev/nvidia-modeset:/dev/nvidia-modeset
+      - /dev:/dev
+      # - /dev/ttyUSB0:/dev/ttyUSB0
+      # - /dev/bus/usb:/dev/bus/usb
+      # - /dev/input:/dev/input
+      # - /dev/dri:/dev/dri
+      # - /dev/nvidia0:/dev/nvidia0
+      # - /dev/nvidiactl:/dev/nvidiactl
+      # - /dev/nvidia-modeset:/dev/nvidia-modeset
     environment:
       - DISPLAY
       - NVIDIA_VISIBLE_DEVICES=all

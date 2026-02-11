@@ -23,11 +23,10 @@ RUN apt update -y \
     ros-${DISTRO}-rmw-cyclonedds-cpp \
     ros-${DISTRO}-nmea-msgs \
     ros-${DISTRO}-mavros-msgs \
+    ros-${DISTRO}-realsense2-camera \
+    ros-${DISTRO}-realsense2-description \
     python3-rosdep \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
-
-
 
 
 # Create a non-root user
@@ -55,7 +54,9 @@ RUN cd src/ && git clone https://github.com/ros-drivers/velodyne.git
 # IMU
 RUN cd src && git clone --branch ros2 https://github.com/xsenssupport/Xsens_MTi_ROS_Driver_and_Ntrip_Client.git
 
-
+# GLIM
+RUN cd src && git clone https://github.com/koide3/glim_ros2.git
+RUN cd src && git clone https://github.com/koide3/glim.git
 
 
 RUN rosdep install --from-paths src --ignore-src -r -y
