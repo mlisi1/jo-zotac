@@ -106,9 +106,16 @@ RUN cd src && git clone --branch ros2 https://github.com/xsenssupport/Xsens_MTi_
 RUN cd src && git clone https://github.com/koide3/glim_ros2.git
 RUN cd src && git clone https://github.com/koide3/glim.git
 
+# Agilex Bunker
+RUN cd src && git clone https://github.com/mlisi1/ugv_sdk.git
+RUN cd src && git clone -b jazzy https://github.com/agilexrobotics/bunker_ros2.git
+
 
 RUN rosdep install --from-paths src --ignore-src -r -y
 
+SHELL ["/bin/bash", "-c"]
+RUN source /opt/ros/jazzy/setup.bash \
+ && colcon build
 
 COPY docker/entrypoint.sh /entrypoint.sh
 RUN sudo chmod +x /entrypoint.sh
