@@ -1,10 +1,11 @@
 from launch import LaunchDescription
 from launch_ros.actions import Node
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.actions import IncludeLaunchDescription, SetEnvironmentVariable, DeclareLaunchArgument
+from launch.actions import IncludeLaunchDescription, SetEnvironmentVariable, DeclareLaunchArgument, ExecuteProcess, RegisterEventHandler, OpaqueFunction
 from ament_index_python.packages import get_package_share_directory
 from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration
+from launch.event_handlers import OnShutdown, OnProcessExit
 import os
 from launch.actions import TimerAction
 from launch_ros.actions import PushRosNamespace
@@ -78,6 +79,9 @@ def generate_launch_description():
     self_pkg = get_package_share_directory('jo_bringup')
     bunker_pkg = get_package_share_directory('bunker_base')
 
+    #SCRIPTS
+    can_up = os.path.join(self_pkg, 'utils', 'can_up.sh')
+    can_down  = os.path.join(self_pkg, 'utils', 'can_down.sh')
 
 
     # LAUNCH FILES
@@ -93,10 +97,8 @@ def generate_launch_description():
     # CONFIG PATHS
     rviz_config = os.path.join(self_pkg, 'config', 'jo.rviz')
     imu_param = os.path.join(self_pkg, 'config', 'imu', 'xsens_mti_node.yaml')
-    gnss_param = os.path.join(self_pkg, 'config', 'imu', 'ntrip-param.yaml.yaml')
+    gnss_param = os.path.join(self_pkg, 'config', 'imu', 'ntrip-param.yaml')
     glim_config = os.path.join(self_pkg, 'config', 'glim', 'glim_config_bunker')
-
-
 
 
 
@@ -120,18 +122,12 @@ def generate_launch_description():
     )
 
 
-
-
-
-
-
-
-
     
 
 
     # INCLUDED LAUNCH FILES
 
+    ## IMU
     imu = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(imu_launch),          
         launch_arguments={
@@ -140,6 +136,7 @@ def generate_launch_description():
         condition=IfCondition(LaunchConfiguration('imu'))
     )
 
+    ## GNSS
     gnss = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(gnss_launch),          
         launch_arguments={
@@ -148,16 +145,39 @@ def generate_launch_description():
         condition=IfCondition(LaunchConfiguration('gnss'))
     )
 
+    ## Velodyne
     velodyne = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(velodyne_launch),          
         condition=IfCondition(LaunchConfiguration('lidar'))
-    )
+    )   
 
+    ## Bunker interface
+    bunker_condition = IfCondition(LaunchConfiguration('bunker'))
 
     bunker = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(bunker_launch),          
-        condition=IfCondition(LaunchConfiguration('bunker'))
+        condition=bunker_condition
     )
+
+    can_up_action = ExecuteProcess(
+        cmd=['bash', can_up],
+        output='screen',
+        condition=bunker_condition,
+    )
+
+    def _run_can_down(context, *args, **kwargs):
+        # Run command directly via subprocess; avoids ExecuteProcess re-execution issues
+        import subprocess
+        subprocess.run(['bash', can_down], check=False)
+        return []
+
+    can_down_on_shutdown = RegisterEventHandler(
+        OnShutdown(on_shutdown=[
+            OpaqueFunction(function=_run_can_down),
+        ]),
+        condition=bunker_condition,
+    )
+
 
 
 
@@ -246,9 +266,12 @@ def generate_launch_description():
         glim_param_folder_arg,
         imu,
         gnss,
+        bunker,
         velodyne,
         rviz,
         glim,
         cam1,
-        cam2
+        cam2,
+        can_up_action,
+        can_down_on_shutdown
     ])

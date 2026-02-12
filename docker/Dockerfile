@@ -33,6 +33,7 @@ RUN apt update -y \
     libmetis-dev \
     libasio-dev \
     libpcap0.8-dev \
+    iproute2 \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 
