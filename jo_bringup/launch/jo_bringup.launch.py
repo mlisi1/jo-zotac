@@ -174,6 +174,7 @@ def generate_launch_description():
         executable='rviz2',
         # arguments=['-d', rviz_config],
         output='screen',
+        emulate_tty=True,
         condition=IfCondition(LaunchConfiguration('rviz')),
     )
 
@@ -182,13 +183,15 @@ def generate_launch_description():
         package='glim_ros',
         executable='glim_rosnode',
         output='screen',
+        emulate_tty=True,
         condition=IfCondition(LaunchConfiguration('glim')),
-        env={
-        '__NV_PRIME_RENDER_OFFLOAD': '0'
+        additional_env={
+            '__NV_PRIME_RENDER_OFFLOAD': '0',
         },
         parameters=[
-           {'config_path' : LaunchConfiguration('glim_param')}
-        ]
+            {'config_path': LaunchConfiguration('glim_param')},
+            {'use_sim_time' : False}
+            ],
     )
     
     cam1 = Node(

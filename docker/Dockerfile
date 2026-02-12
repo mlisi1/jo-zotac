@@ -1,56 +1,4 @@
-FROM nvidia/cuda:13.0.0-devel-ubuntu24.04 AS builder
-
-# Install build essentials
-RUN apt update && apt-get install -y \
-    build-essential \
-    cmake \
-    git \
-    python3-dev \
-    python3-pip \
-    libglm-dev \ 
-    libglfw3-dev \
-    libpng-dev \
-    libboost-all-dev \
-    libeigen3-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-# Build GTSAM
-RUN git clone https://github.com/borglab/gtsam -b 4.3a0
-RUN cd gtsam \ 
-    # && git checkout 4.3a0 \ 
-    && mkdir build && cd build \
-    && cmake .. \
-        -DGTSAM_BUILD_EXAMPLES_ALWAYS=OFF \
-        -DGTSAM_BUILD_TESTS=OFF \
-        -DGTSAM_WITH_TBB=OFF \
-        -DGTSAM_BUILD_WITH_MARCH_NATIVE=OFF \
-    && make -j$(nproc) \
-    && make install DESTDIR=/gtsam-install && make install
-
-# Build Iridescence
-RUN git clone https://github.com/koide3/iridescence --recursive \
-    && mkdir iridescence/build && cd iridescence/build \
-    && cmake .. -DCMAKE_BUILD_TYPE=Release \
-    && make -j$(nproc) \ 
-    && make install DESTDIR=/iridescence-install && make install
-
-# Build GTSAM-Points
-RUN git clone https://github.com/koide3/gtsam_points \
-    && mkdir gtsam_points/build && cd gtsam_points/build \
-    && cmake .. -DCMAKE_BUILD_TYPE=Release \
-    && cmake .. \
-      -DBUILD_WITH_OPENMP=ON \        
-      -DBUILD_WITH_CUDA=ON \           
-      -DCMAKE_BUILD_TYPE=Release \
-    && make -j$(nproc) && make install DESTDIR=/gtsam_points-install
-
-
-
 FROM osrf/ros:jazzy-desktop-full
-
-COPY --from=builder /gtsam-install/ /
-COPY --from=builder /iridescence-install/ /
-COPY --from=builder /gtsam_points-install/ /
 
 ENV GZ_VERSION=harmonic
 ARG DISTRO=jazzy
@@ -78,6 +26,13 @@ RUN apt update -y \
     ros-${DISTRO}-realsense2-camera \
     ros-${DISTRO}-realsense2-description \
     python3-rosdep \
+    software-properties-common \
+    ca-certificates \
+    gnupg \
+    wget \
+    libmetis-dev \
+    libasio-dev \
+    libpcap0.8-dev \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 
@@ -92,6 +47,26 @@ RUN useradd --uid ${USER_UID} --gid ${USER_GID} -m ${USERNAME} \
     && apt install -y sudo \
     && echo ${USERNAME} ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/${USERNAME} \
     && chmod 0440 /etc/sudoers.d/${USERNAME}
+
+
+
+# --- CUDA repo (Ubuntu 24.04) ---
+RUN wget -q https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/cuda-keyring_1.1-1_all.deb \
+ && dpkg -i cuda-keyring_1.1-1_all.deb \
+ && wget -q https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/cuda-ubuntu2404.pin \
+ && mv cuda-ubuntu2404.pin /etc/apt/preferences.d/cuda-repository-pin-600 
+
+ENV CUDAToolkit_ROOT=/usr/local/cuda
+
+RUN curl -s https://koide3.github.io/ppa/setup_ppa.sh | sudo bash
+RUN sudo add-apt-repository -y ppa:koide3/iridescence
+RUN apt update -y \
+    && apt install -y libiridescence-dev \
+    libgtsam-points-cuda13.1-dev \
+    cuda-cudart-13-0 \
+    cuda-nvcc-13-0 \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
 
 USER ros
 RUN sudo usermod -aG dialout ros
