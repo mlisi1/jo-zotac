@@ -102,6 +102,14 @@ RUN sudo chmod +x /entrypoint.sh
 RUN echo "source /opt/ros/${DISTRO}/setup.bash" >> ~/.bashrc
 RUN echo "source /home/ros/install/setup.bash" >> ~/.bashrc
 RUN echo "source /usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash" >> ~/.bashrc 
+RUN echo "alias light_stack='ros2 launch jo_bringup jo_bringup.launch.py'" >> ~/.bashrc 
+RUN echo "alias glim_only='ros2 launch jo_bringup jo_bringup.launch.py imu:=false lidar:=false glim:=true'" >> ~/.bashrc 
+RUN echo "alias glim_sim='ros2 launch jo_bringup jo_bringup.launch.py imu:=false lidar:=false glim:=true use_sim_time:=true'" >> ~/.bashrc 
+RUN echo "alias full_stack='ros2 launch jo_bringup jo_bringup.launch.py glim:=true front_cam:=true back_cam:=true gnss:=true'" >> ~/.bashrc 
+RUN echo "alias offline_viewer='ros2 run glim_ros offline_viewer'" >> ~/.bashrc 
+RUN echo "source /save_map.bash" >> ~/.bashrc 
+
+COPY docker/save_map.bash /save_map.bash
 
 
 ENTRYPOINT ["/entrypoint.sh"]

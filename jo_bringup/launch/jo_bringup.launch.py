@@ -51,22 +51,28 @@ def generate_launch_description():
         description='Whether to launch the GLIM stack'
     )
 
-    launch_cam1_arg = DeclareLaunchArgument(
-        'cam1',
+    launch_front_cam_arg = DeclareLaunchArgument(
+        'front_cam',
         default_value='false',
-        description='Whether to launch the RealSense cam1 stack'
+        description='Whether to launch the RealSense front camera stack'
     )
 
-    launch_cam2_arg = DeclareLaunchArgument(
-        'cam2',
+    launch_back_cam_arg = DeclareLaunchArgument(
+        'back_cam',
         default_value='false',
-        description='Whether to launch the RealSense cam2 stack'
+        description='Whether to launch the RealSense back camera stack'
     )
 
     launch_bunker_arg = DeclareLaunchArgument(
         'bunker',
         default_value='false',
         description='Whether to launch the Agilex Bunker interface'
+    )
+
+    use_sim_time_arg = DeclareLaunchArgument(
+        'use_sim_time',
+        default_value='false',
+        description='Whether to use simulation time'
     )
    
 
@@ -98,7 +104,7 @@ def generate_launch_description():
     rviz_config = os.path.join(self_pkg, 'config', 'jo.rviz')
     imu_param = os.path.join(self_pkg, 'config', 'imu', 'xsens_mti_node.yaml')
     gnss_param = os.path.join(self_pkg, 'config', 'imu', 'ntrip-param.yaml')
-    glim_config = os.path.join(self_pkg, 'config', 'glim', 'glim_config_bunker')
+    glim_config = os.path.join(self_pkg, 'config', 'glim', 'glim_config_bunker_sim')
 
 
 
@@ -181,12 +187,6 @@ def generate_launch_description():
 
 
 
-
-
-
-
-
-
     # NODES 
 
     rviz = Node(
@@ -210,15 +210,14 @@ def generate_launch_description():
         },
         parameters=[
             {'config_path': LaunchConfiguration('glim_param')},
-            {'use_sim_time' : False}
+            {'use_sim_time' : LaunchConfiguration('use_sim_time')}
             ],
     )
     
-    cam1 = Node(
+    front_cam = Node(
         package='realsense2_camera',
         executable='realsense2_camera_node',
-        namespace='camera1',
-        name='rs1',
+        namespace='front_camera',
         output='screen',
         parameters=[{
             'serial_no': '239222303721',
@@ -227,15 +226,17 @@ def generate_launch_description():
             'pointcloud.enable': True,
             'decimation_filter.enable': True,
             'decimation_filter.filter_magnitude': 6,
+            'align_depth.enable': True,
+            'pointcloud.ordered_pc': True,
+            'pointcloud.stream_filter': 2, # COLOR
         }],
-        condition=IfCondition(LaunchConfiguration('cam1')),
+        condition=IfCondition(LaunchConfiguration('front_cam')),
     )
 
-    cam2 = Node(
+    back_cam = Node(
         package='realsense2_camera',
         executable='realsense2_camera_node',
-        namespace='camera2',
-        name='rs2',
+        namespace='back_camera',
         output='screen',
         parameters=[{
             'serial_no': '242422305079',
@@ -244,8 +245,11 @@ def generate_launch_description():
             'pointcloud.enable': True,
             'decimation_filter.enable': True,
             'decimation_filter.filter_magnitude': 6,
+            'align_depth.enable': True,
+            'pointcloud.ordered_pc': True,
+            'pointcloud.stream_filter': 2, # COLOR
         }],
-        condition=IfCondition(LaunchConfiguration('cam2')),
+        condition=IfCondition(LaunchConfiguration('back_cam')),
     )
 
     
@@ -258,20 +262,21 @@ def generate_launch_description():
         launch_gnss_arg,
         launch_rviz_arg,    
         launch_glim_arg,
-        launch_cam1_arg,
-        launch_cam2_arg,
+        launch_front_cam_arg,
+        launch_back_cam_arg,
         launch_bunker_arg,
         imu_param_file_arg,  
         gnss_param_file_arg,  
         glim_param_folder_arg,
+        use_sim_time_arg,
         imu,
         gnss,
         bunker,
         velodyne,
         rviz,
         glim,
-        cam1,
-        cam2,
+        front_cam,
+        back_cam,
         can_up_action,
         can_down_on_shutdown
     ])

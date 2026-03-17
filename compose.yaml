@@ -22,13 +22,16 @@ services:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - /dev:/dev
       - ./jo_bringup:/home/ros/src/jo_bringup
+      - ~/.Xauthority:/tmp/.Xauthority:ro
+      - ./saved_maps:/saved_maps
     environment:
-      - DISPLAY
+      - DISPLAY=${DISPLAY}
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=all,graphics,display,video,utility,compute
-      - __NV_PRIME_RENDER_OFFLOAD=1 
-      - __GLX_VENDOR_LIBRARY_NAME=nvidia
+      - __NV_PRIME_RENDER_OFFLOAD=
+      - __GLX_VENDOR_LIBRARY_NAME=
       - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+      - XAUTHORITY=/tmp/.Xauthority
     group_add:
       - dialout
 
