@@ -109,7 +109,7 @@ RUN cd src && git clone https://github.com/sutharsan-311/nav2_config.git
 
 
 RUN cd src && git clone https://github.com/introlab/rtabmap.git
-RUN cd src &&git clone --branch ros2 https://github.com/introlab/rtabmap_ros.git
+RUN cd src && git clone --branch ros2 https://github.com/introlab/rtabmap_ros.git
 # rosdep update && rosdep install --from-paths src --ignore-src -r -y
 RUN export MAKEFLAGS="-j6" # Can be ignored if you have a lot of RAM (>16GB)
 # colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
