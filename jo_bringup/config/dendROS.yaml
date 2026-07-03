@@ -1,0 +1,32 @@
+groups:
+
+
+  sensors:
+    color: blue
+    label: "SENS"
+    nodes:
+      - bunker_base_node
+      - ntrip_client
+      - realsense2_camera_node
+      - frame_latency
+      - camera
+      - xsens_mti_node
+      - velodyne_transform_node
+      - velodyne_laserscan_node
+      - velodyne_driver_node
+
+
+  localization:
+    color: yellow
+    label: "LOC"
+    nodes:
+      - glim_rosnode
+
+
+
+
+defaults:
+  color_mode: tag_only
+  show_group_tag: true
+  unmatched_color: null
+  tag_style: inverted

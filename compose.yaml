@@ -36,6 +36,7 @@ services:
       - __GLX_VENDOR_LIBRARY_NAME=
       - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
       - XAUTHORITY=/tmp/.Xauthority
+      - RCUTILS_COLORIZED_OUTPUT=1
     group_add:
       - dialout
 

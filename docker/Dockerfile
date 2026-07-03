@@ -79,10 +79,14 @@ RUN sudo add-apt-repository -y ppa:koide3/iridescence
 RUN apt update -y \
     && apt install -y libiridescence-dev \
     libgtsam-points-cuda13.1-dev \
-    cuda-cudart-13-0 \
-    cuda-nvcc-13-0 \
+    cuda-cudart-13-1 \
+    cuda-nvcc-13-1 \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
+
+ENV PATH=/usr/local/cuda-13.1/bin:${PATH}
+ENV LD_LIBRARY_PATH=/usr/local/cuda-13.1/lib64:${LD_LIBRARY_PATH}
+ENV CUDAToolkit_ROOT=/usr/local/cuda-13.1
 
 USER ros
 RUN sudo usermod -aG dialout ros
@@ -99,7 +103,16 @@ RUN cd src && git clone --branch ros2 https://github.com/mlisi1/Xsens_MTi_ROS_Dr
 
 # GLIM
 RUN cd src && git clone https://github.com/mlisi1/glim_ros2.git
-RUN cd src && git clone https://github.com/koide3/glim.git
+
+
+# Pinned past v1.2.1 to commit a9be365, which fixes ImuFactor-related build
+# errors (koide3/glim#306) caused by GTSAM 4.3's templated ImuFactor/
+# PreintegratedImuMeasurements no longer matching glim's old forward declarations.
+RUN mkdir src/glim && cd src/glim \
+    && git init \
+    && git remote add origin https://github.com/koide3/glim.git \
+    && git fetch --depth 1 origin a9be365001e571ef4b16cfbd74bf1da82672480b \
+    && git checkout FETCH_HEAD
 
 # Agilex Bunker
 RUN cd src && git clone https://github.com/mlisi1/ugv_sdk.git
@@ -110,18 +123,25 @@ RUN cd src && git clone https://github.com/sutharsan-311/nav2_config.git
 
 RUN cd src && git clone https://github.com/introlab/rtabmap.git
 RUN cd src && git clone --branch ros2 https://github.com/introlab/rtabmap_ros.git
-# rosdep update && rosdep install --from-paths src --ignore-src -r -y
-RUN export MAKEFLAGS="-j6" # Can be ignored if you have a lot of RAM (>16GB)
-# colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
-
-# RUN rosdep install --from-paths src --ignore-src -r -y
 
 SHELL ["/bin/bash", "-c"]
+
+# Build everything except the rtabmap* family with full parallelism.
 RUN source /opt/ros/jazzy/setup.bash \
- && colcon build --cmake-args -DRTABMAP_SYNC_MULTI_RGBD=ON -DRTABMAP_SYNC_USER_DATA=ON -DCMAKE_BUILD_TYPE=Release
+ && colcon build --packages-skip-regex '^rtabmap.*' --cmake-args -DCMAKE_BUILD_TYPE=Release
+
+# The rtabmap/rtabmap_ros repos expand into ~14 rtabmap_* packages, several of
+# which (rtabmap, rtabmap_slam, rtabmap_sync, rtabmap_util, ...) are heavy per
+# compile unit. Building them all at once (as the full-workspace build above
+# would) OOMs on 32GB. Build them one package at a time, capped to 8 make jobs each.
+RUN source /opt/ros/jazzy/setup.bash \
+ && MAKEFLAGS="-j6" colcon build --packages-select-regex '^rtabmap.*' --executor sequential --cmake-args -DRTABMAP_SYNC_MULTI_RGBD=ON -DRTABMAP_SYNC_USER_DATA=ON -DCMAKE_BUILD_TYPE=Release
 
 COPY docker/entrypoint.sh /entrypoint.sh
 RUN sudo chmod +x /entrypoint.sh
+
+
+RUN git clone https://github.com/mlisi1/DendROS && cd DendROS && bash install.sh -y
 
 COPY docker/save_map.bash /save_map.bash
 COPY docker/record_all.bash /record_all.bash
