@@ -45,12 +45,6 @@ def generate_launch_description():
         description='Whether to launch the Velodyne stack'
     )
 
-    launch_glim_arg = DeclareLaunchArgument(
-        'glim',
-        default_value='false',
-        description='Whether to launch the GLIM stack'
-    )
-
     launch_front_cam_arg = DeclareLaunchArgument(
         'front_cam',
         default_value='false',
@@ -74,12 +68,37 @@ def generate_launch_description():
         default_value='false',
         description='Whether to use simulation time'
     )
+
+    launch_localization_arg = DeclareLaunchArgument(
+        'localization',
+        default_value='false',
+        description='Whether to launch the localization stack'
+    )
+
+    launch_localization_gps_arg = DeclareLaunchArgument(
+        'localization_gps',
+        default_value='false',
+        description='Whether to launch the GPS-based localization stack'
+    )
+
+
+    launch_navigation_arg = DeclareLaunchArgument(
+        'navigation',
+        default_value='false',
+        description='Whether to launch the navigation stack'
+    )
+
+    launch_navigation_gps_arg = DeclareLaunchArgument(
+        'navigation_gps',
+        default_value='false',
+        description='Whether to launch the GPS-based navigation stack'
+    )
    
 
 
     # PKGS
     imu_pkg = get_package_share_directory('xsens_mti_ros2_driver')
-    camera_pkg = get_package_share_directory('realsense2_camera')
+    navigation_pkg = get_package_share_directory('jo_navigation')
     velodyne_pkg = get_package_share_directory('velodyne')
     gnss_pkg = get_package_share_directory('ntrip')
     description_pkg = get_package_share_directory('jo_description')
@@ -94,11 +113,14 @@ def generate_launch_description():
     # LAUNCH FILES
     imu_launch = os.path.join(imu_pkg, 'launch', 'xsens_mti_node.launch.py')
     velodyne_launch = os.path.join(velodyne_pkg, 'launch', 'velodyne-all-nodes-VLP16-launch.py')
-    camera_launch = os.path.join(camera_pkg, 'launch', 'rs_launch.py')
     gnss_launch = os.path.join(gnss_pkg, 'launch', 'ntrip_launch.py')
     description_launch = os.path.join(description_pkg, 'launch', 'description.launch.py')
     bunker_launch = os.path.join(bunker_pkg, 'launch', 'bunker_base.launch.py')
-    
+    localization_launch = os.path.join(navigation_pkg, 'launch', 'localization.launch.py')
+    localization_gps_launch = os.path.join(navigation_pkg, 'launch', 'localization_gps.launch.py')
+    navigation_launch = os.path.join(navigation_pkg, 'launch', 'navigation.launch.py')
+    navigation_gps_launch = os.path.join(navigation_pkg, 'launch', 'navigation_gps.launch.py')
+
 
 
 
@@ -106,7 +128,6 @@ def generate_launch_description():
     rviz_config = os.path.join(self_pkg, 'config', 'jo.rviz')
     imu_param = os.path.join(self_pkg, 'config', 'imu', 'xsens_mti_node.yaml')
     gnss_param = os.path.join(self_pkg, 'config', 'imu', 'ntrip-param.yaml')
-    glim_config = os.path.join(self_pkg, 'config', 'glim', 'glim_config_bunker_sim')
     front_cam_config = os.path.join(self_pkg, 'config', 'cameras', 'front_d455.yaml')
     back_cam_config = os.path.join(self_pkg, 'config', 'cameras', 'back_d455.yaml')
 
@@ -124,14 +145,6 @@ def generate_launch_description():
         default_value=gnss_param,
         description='GNSS param file passed to ntrip launch'
     )
-
-    glim_param_folder_arg = DeclareLaunchArgument(
-        'glim_param',
-        default_value=glim_config,
-        description='GLIM param folder passed to its node'
-    )
-
-
     
 
 
@@ -199,6 +212,29 @@ def generate_launch_description():
 
 
 
+    localization = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(localization_launch),          
+        condition=IfCondition(LaunchConfiguration('localization'))
+    )  
+
+    localization_gps = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(localization_gps_launch),          
+        condition=IfCondition(LaunchConfiguration('localization_gps'))
+    )  
+
+
+    navigation = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(navigation_launch),          
+        condition=IfCondition(LaunchConfiguration('navigation'))
+    )  
+
+    navigation_gps = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(navigation_gps_launch),          
+        condition=IfCondition(LaunchConfiguration('navigation_gps'))
+    )  
+
+
+
 
     # NODES 
 
@@ -209,22 +245,6 @@ def generate_launch_description():
         output='screen',
         emulate_tty=True,
         condition=IfCondition(LaunchConfiguration('rviz')),
-    )
-
-
-    glim = Node(
-        package='glim_ros',
-        executable='glim_rosnode',
-        output='screen',
-        emulate_tty=True,
-        condition=IfCondition(LaunchConfiguration('glim')),
-        additional_env={
-            '__NV_PRIME_RENDER_OFFLOAD': '0',
-        },
-        parameters=[
-            {'config_path': LaunchConfiguration('glim_param')},
-            {'use_sim_time' : LaunchConfiguration('use_sim_time')}
-            ],
     )
     
     front_cam = Node(
@@ -254,21 +274,26 @@ def generate_launch_description():
         launch_lidar_arg,
         launch_gnss_arg,
         launch_rviz_arg,    
-        launch_glim_arg,
         launch_front_cam_arg,
         launch_back_cam_arg,
         launch_bunker_arg,
+        launch_localization_arg,
+        launch_localization_gps_arg,
+        launch_navigation_arg,
+        launch_navigation_gps_arg,
         imu_param_file_arg,  
         gnss_param_file_arg,  
-        glim_param_folder_arg,
         use_sim_time_arg,
         description,
         imu,
         gnss,
         bunker,
+        localization,
+        localization_gps,
+        navigation,
+        navigation_gps,
         velodyne,
         rviz,
-        glim,
         front_cam,
         back_cam,
         can_up_action,
