@@ -42,7 +42,10 @@ groups:
       - smoother_server
       - velocity_smoother
       - waypoint_follower      
-    
+      - bt_navigator_navigate_through_poses_rclcpp_node
+      - bt_navigator_navigate_to_pose_rclcpp_node
+      - global_costmap
+      - local_costmap    
 
 
 

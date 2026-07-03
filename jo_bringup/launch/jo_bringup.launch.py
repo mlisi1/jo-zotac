@@ -34,7 +34,7 @@ def generate_launch_description():
     )
 
     launch_rviz_arg = DeclareLaunchArgument(
-        'rviz',
+        'sens_rviz',
         default_value='false',
         description='Launch RViz2 if true'
     )
@@ -118,7 +118,7 @@ def generate_launch_description():
     bunker_launch = os.path.join(bunker_pkg, 'launch', 'bunker_base.launch.py')
     localization_launch = os.path.join(navigation_pkg, 'launch', 'localization.launch.py')
     localization_gps_launch = os.path.join(navigation_pkg, 'launch', 'localization_gps.launch.py')
-    navigation_launch = os.path.join(navigation_pkg, 'launch', 'navigation.launch.py')
+    navigation_launch = os.path.join(navigation_pkg, 'launch', 'navigation_local.launch.py')
     navigation_gps_launch = os.path.join(navigation_pkg, 'launch', 'navigation_gps.launch.py')
 
 
@@ -241,10 +241,10 @@ def generate_launch_description():
     rviz = Node(
         package='rviz2',
         executable='rviz2',
-        # arguments=['-d', rviz_config],
+        arguments=['-d', rviz_config],
         output='screen',
         emulate_tty=True,
-        condition=IfCondition(LaunchConfiguration('rviz')),
+        condition=IfCondition(LaunchConfiguration('sens_rviz')),
     )
     
     front_cam = Node(
