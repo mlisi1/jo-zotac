@@ -12,3 +12,5 @@ alias no_gpu='__NV_PRIME_RENDER_OFFLOAD=0 __GLX_VENDOR_LIBRARY_NAME='
 alias full_navigation='ros2 launch jo_bringup jo_bringup.launch.py front_cam:=true localization:=true navigation:=true rviz:=true'
 alias full_gps_navigation='ros2 launch jo_bringup jo_bringup.launch.py front_cam:=true gnss:=true localization_gps:=true navigation_gps:=true rviz:=true'
 
+alias extract_videos='/extract_camera_videos.sh'
+

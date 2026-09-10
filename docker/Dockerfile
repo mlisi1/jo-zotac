@@ -145,6 +145,9 @@ RUN git clone https://github.com/mlisi1/DendROS && cd DendROS && bash install.sh
 
 COPY docker/save_map.bash /save_map.bash
 COPY docker/record_all.bash /record_all.bash
+COPY docker/extract_camera_videos.sh /extract_camera_videos.sh
+COPY docker/extract_camera_videos.py /extract_camera_videos.py
+RUN sudo chmod +x /extract_camera_videos.sh
 COPY docker/utilities.sh /etc/utilities.sh
 RUN echo 'source /etc/utilities.sh' >> ~/.bashrc
 
