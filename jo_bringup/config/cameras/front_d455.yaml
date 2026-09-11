@@ -3,7 +3,7 @@
 
     #General parameters
     camera_name: front_camera
-    serial_no: '239222303721'
+    serial_no: '318122300396'
     base_frame_id: link
     publish_tf: true
     tf_prefix: ''
@@ -21,7 +21,7 @@
     enable_infra1: true
     enable_infra2: true
     enable_rgbd: false
-    enable_sync: false
+    enable_sync: true
 
 
 

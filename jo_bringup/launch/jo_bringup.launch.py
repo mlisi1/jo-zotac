@@ -169,6 +169,7 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(gnss_launch),          
         launch_arguments={
             'param_file': LaunchConfiguration('gnss_param'),
+            'log_level': 'error',
         }.items(),
         condition=IfCondition(LaunchConfiguration('gnss'))
     )
