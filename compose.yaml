@@ -28,6 +28,8 @@ services:
       - ~/.Xauthority:/tmp/.Xauthority:ro
       - ./saved_maps:/saved_maps
       - ./bags:/home/ros/bags
+    env_file:
+      - .env
     environment:
       - DISPLAY=${DISPLAY}
       - NVIDIA_VISIBLE_DEVICES=all

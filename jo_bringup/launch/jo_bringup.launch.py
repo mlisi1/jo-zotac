@@ -7,6 +7,7 @@ from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration
 from launch.event_handlers import OnShutdown, OnProcessExit
 import os
+import tempfile
 from launch.actions import TimerAction
 from launch_ros.actions import PushRosNamespace
 from launch.actions import GroupAction
@@ -165,6 +166,29 @@ def generate_launch_description():
     )
 
     ## GNSS
+    def resolve_ntrip_params(context, *args, **kwargs):
+        # Substitutes ${NTRIP_USERNAME}/${NTRIP_PASSWORD} placeholders in the
+        # gnss_param yaml with values from the environment (see .env / compose.yaml
+        # env_file), so real NTRIP credentials never need to be committed to git.
+        template_path = LaunchConfiguration('gnss_param').perform(context)
+        with open(template_path) as f:
+            content = f.read()
+
+        content = content.replace('${NTRIP_USERNAME}', os.environ.get('NTRIP_USERNAME', ''))
+        content = content.replace('${NTRIP_PASSWORD}', os.environ.get('NTRIP_PASSWORD', ''))
+
+        fd, resolved_path = tempfile.mkstemp(suffix='.yaml', prefix='ntrip-param-')
+        with os.fdopen(fd, 'w') as f:
+            f.write(content)
+
+        context.launch_configurations['gnss_param'] = resolved_path
+        return []
+
+    resolve_ntrip_params_action = OpaqueFunction(
+        function=resolve_ntrip_params,
+        condition=IfCondition(LaunchConfiguration('gnss')),
+    )
+
     gnss = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(gnss_launch),          
         launch_arguments={
@@ -287,6 +311,7 @@ def generate_launch_description():
         use_sim_time_arg,
         description,
         imu,
+        resolve_ntrip_params_action,
         gnss,
         bunker,
         localization,
