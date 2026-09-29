@@ -22,8 +22,10 @@ import gzip
 import os
 import re
 import struct
+import shutil
 import subprocess
 import sys
+import time
 
 import cv2
 import numpy as np
@@ -107,6 +109,38 @@ def discover_streams(reader):
         })
     streams.sort(key=lambda s: s["base"])
     return streams
+
+
+class ProgressBar:
+    """Minimal single-line progress bar on stderr (no tqdm in the container)."""
+
+    def __init__(self, total, label=""):
+        self.total = max(total, 1)
+        self.label = label
+        self.start = time.monotonic()
+        self.last_draw = 0.0
+        self.enabled = sys.stderr.isatty()
+
+    def update(self, done, force=False):
+        now = time.monotonic()
+        if not self.enabled or (not force and now - self.last_draw < 0.2):
+            return
+        self.last_draw = now
+        elapsed = now - self.start
+        rate = done / elapsed if elapsed > 0 else 0.0
+        eta = (self.total - done) / rate if rate > 0 else 0.0
+        frac = min(done / self.total, 1.0)
+        stats = f" {frac * 100:5.1f}% {done}/{self.total} {rate:5.1f} fr/s ETA {int(eta) // 60:02d}:{int(eta) % 60:02d}"
+        width = max(10, shutil.get_terminal_size((80, 20)).columns - len(self.label) - len(stats) - 4)
+        filled = int(width * frac)
+        sys.stderr.write(f"\r  {self.label}[{'#' * filled}{'.' * (width - filled)}]{stats}")
+        sys.stderr.flush()
+
+    def close(self, done):
+        self.update(done, force=True)
+        if self.enabled:
+            sys.stderr.write("\n")
+            sys.stderr.flush()
 
 
 def make_reader(bag_path, topic=None):
@@ -209,7 +243,9 @@ def export_stream(bag_path, stream, out_path, depth_max_mm):
 
     n_ok, n_fail = 0, 0
     consecutive_fail = 0
+    progress = ProgressBar(stream["count"])
     while reader.has_next():
+        progress.update(n_ok + n_fail)
         _, data, _ = reader.read_next()
         msg = deserialize_message(data, msg_type)
         try:
@@ -262,11 +298,12 @@ def export_stream(bag_path, stream, out_path, depth_max_mm):
             n_fail += 1
             consecutive_fail += 1
             if n_fail <= 5:
-                print(f"  warning: dropped a frame ({e})", file=sys.stderr)
+                print(f"\n  warning: dropped a frame ({e})", file=sys.stderr)
             if consecutive_fail > 100:
-                print(f"  aborting '{topic}': {consecutive_fail} consecutive decode failures", file=sys.stderr)
+                print(f"\n  aborting '{topic}': {consecutive_fail} consecutive decode failures", file=sys.stderr)
                 break
 
+    progress.close(n_ok + n_fail)
     proc.stdin.close()
     proc.wait()
     reader.close()

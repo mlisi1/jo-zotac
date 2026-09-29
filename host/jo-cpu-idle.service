@@ -1,0 +1,15 @@
+[Unit]
+Description=Disable deep CPU idle states (C2/C3) so USB cameras are serviced in time
+# C3 exit latency on this CPU is ~1 ms, which made the RealSense cameras
+# deliver incomplete frames. Equivalent to `cpupower idle-set -D 100`, but
+# writes sysfs directly so it keeps working after kernel updates (the
+# cpupower wrapper needs linux-tools for the running kernel).
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/sh -c 'for s in /sys/devices/system/cpu/cpu*/cpuidle/state*; do [ "$$(cat $$s/latency)" -gt 100 ] && echo 1 > $$s/disable; done; true'
+ExecStop=/bin/sh -c 'for s in /sys/devices/system/cpu/cpu*/cpuidle/state*; do echo 0 > $$s/disable; done; true'
+
+[Install]
+WantedBy=multi-user.target

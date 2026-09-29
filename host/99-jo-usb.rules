@@ -1,0 +1,14 @@
+# Host udev rules for the Jo robot (install with host/install_host_rules.sh).
+
+# --- Xsens MTi (FTDI USB-serial converter 2639:0301) ---
+# The FTDI chip buffers serial data for latency_timer ms (default 16) before
+# sending it over USB, so 400 Hz IMU samples arrive in bursts of ~6-8 with
+# nearly identical host timestamps. 1 ms delivers them as they are produced.
+ACTION=="add", SUBSYSTEM=="usb-serial", DRIVER=="ftdi_sio", ATTRS{idVendor}=="2639", ATTRS{idProduct}=="0301", ATTR{latency_timer}="1"
+
+# --- Disable USB autosuspend (power saving) for every USB device ---
+# Covers both RealSense D456 cameras (8086:0b5c) whenever they are plugged in,
+# the Xsens converter and all hubs/ports. Autosuspend can make the cameras
+# drop/corrupt frames ("Incomplete video frame detected"). Cost: a few hundred
+# mW at most, since idle devices no longer sleep.
+ACTION=="add", SUBSYSTEM=="usb", TEST=="power/control", ATTR{power/control}="on"
