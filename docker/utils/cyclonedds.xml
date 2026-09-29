@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  CycloneDDS config for the robot (loaded via CYCLONEDDS_URI in compose.yaml).
+
+  By default Cyclone sends data for topics with several subscribers as UDP
+  multicast on a physical NIC (the lab LAN, or even the 100 Mbit Velodyne link).
+  With raw camera streams that saturates the link and delays every multicast
+  topic by ~1 s (/velodyne_points included), which triggers GLIM's
+  "large time difference between points and imu" warning.
+
+  AllowMulticast=spdp keeps multicast for discovery only (remote machines can
+  still find the robot); all data is sent unicast, so local traffic stays on
+  loopback and never leaves the PC.
+-->
+<CycloneDDS xmlns="https://cdds.io/config">
+  <Domain Id="any">
+    <General>
+      <AllowMulticast>spdp</AllowMulticast>
+    </General>
+  </Domain>
+</CycloneDDS>

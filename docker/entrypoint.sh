@@ -11,6 +11,6 @@ colcon build \
 
 # 3) Source overlay
 source install/setup.bash
-source /save_map.bash
+source /home/ros/utils/save_map.bash
 # 4) Run whatever was passed (ros2 launch ...)
 exec "$@"

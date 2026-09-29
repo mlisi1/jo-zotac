@@ -1,0 +1,35 @@
+# Best-effort QoS for the recorder on heavy topics: if the recorder falls behind it drops
+# messages in the bag instead of back-pressuring (slowing) the publishers GLIM / nav depend on.
+# Overrides for topics not being recorded are ignored.
+# rosbag2 requires every field of the profile; durations of 0 mean 'use the default'.
+/velodyne_points: &best_effort
+  history: keep_last
+  depth: 30
+  reliability: best_effort
+  durability: volatile
+  deadline: {sec: 0, nsec: 0}
+  lifespan: {sec: 0, nsec: 0}
+  liveliness: system_default
+  liveliness_lease_duration: {sec: 0, nsec: 0}
+  avoid_ros_namespace_conventions: false
+/velodyne_packets: *best_effort
+/front_camera/camera/color/image_raw: *best_effort
+/front_camera/camera/depth/image_rect_raw: *best_effort
+/front_camera/camera/infra1/image_rect_raw: *best_effort
+/front_camera/camera/infra2/image_rect_raw: *best_effort
+/front_camera/camera/aligned_depth_to_color/image_raw: *best_effort
+/back_camera/camera/color/image_raw: *best_effort
+/back_camera/camera/depth/image_rect_raw: *best_effort
+/back_camera/camera/infra1/image_rect_raw: *best_effort
+/back_camera/camera/infra2/image_rect_raw: *best_effort
+/back_camera/camera/aligned_depth_to_color/image_raw: *best_effort
+/front_camera/camera/color/image_raw/compressed: *best_effort
+/front_camera/camera/infra1/image_rect_raw/compressed: *best_effort
+/front_camera/camera/infra2/image_rect_raw/compressed: *best_effort
+/front_camera/camera/depth/image_rect_raw/compressedDepth: *best_effort
+/front_camera/camera/aligned_depth_to_color/image_raw/compressedDepth: *best_effort
+/back_camera/camera/color/image_raw/compressed: *best_effort
+/back_camera/camera/infra1/image_rect_raw/compressed: *best_effort
+/back_camera/camera/infra2/image_rect_raw/compressed: *best_effort
+/back_camera/camera/depth/image_rect_raw/compressedDepth: *best_effort
+/back_camera/camera/aligned_depth_to_color/image_raw/compressedDepth: *best_effort

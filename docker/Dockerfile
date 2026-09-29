@@ -43,6 +43,7 @@ RUN apt update -y \
     python3-rosdep \
     software-properties-common \
     ca-certificates \
+    ffmpeg \
     gnupg \
     wget \
     libmetis-dev \
@@ -140,16 +141,9 @@ RUN source /opt/ros/jazzy/setup.bash \
 COPY docker/entrypoint.sh /entrypoint.sh
 RUN sudo chmod +x /entrypoint.sh
 
-
 RUN git clone https://github.com/mlisi1/DendROS && cd DendROS && bash install.sh -y
 
-COPY docker/save_map.bash /save_map.bash
-COPY docker/record_all.bash /record_all.bash
-COPY docker/extract_camera_videos.sh /extract_camera_videos.sh
-COPY docker/extract_camera_videos.py /extract_camera_videos.py
-RUN sudo chmod +x /extract_camera_videos.sh
-COPY docker/utilities.sh /etc/utilities.sh
-RUN echo 'source /etc/utilities.sh' >> ~/.bashrc
+RUN echo '[ -f /home/ros/utils/utilities.sh ] && source /home/ros/utils/utilities.sh' >> ~/.bashrc
 
 
 ENTRYPOINT ["/entrypoint.sh"]

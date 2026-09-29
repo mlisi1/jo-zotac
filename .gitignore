@@ -1,3 +1,6 @@
 saved_maps/*
 bags/*
 .env
+*.zip
+*.sha256    
+*.md

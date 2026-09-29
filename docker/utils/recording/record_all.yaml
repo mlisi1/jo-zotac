@@ -1,0 +1,149 @@
+# Full recording: sensors with RAW images + localization + nav2 diagnostics.
+# Topics: 125. Usage (see docker/utils/recordings.bash):
+#   ros2 run rosbag2_transport recorder --ros-args \
+#     --params-file /home/ros/utils/recording/record_all.yaml \
+#     -p storage.uri:=/home/ros/bags/<timestamp>_<name>
+/**:
+  ros__parameters:
+    record:
+      topics:
+        # --- LiDAR ---
+        - /velodyne_packets
+        - /velodyne_points
+        - /scan
+        # --- Xsens IMU ---
+        - /imu/data
+        - /imu/mag
+        - /imu/acceleration
+        - /imu/angular_velocity
+        - /imu/time_ref
+        - /imu/utctime
+        - /filter/euler
+        - /filter/free_acceleration
+        - /filter/quaternion
+        - /filter/twist
+        - /filter/velocity
+        - /filter/positionlla
+        - /pressure
+        - /temperature
+        - /status
+        # --- GNSS / RTK ---
+        - /gnss
+        - /gnss_pose
+        - /nmea
+        - /rtcm
+        - /ntrip/diagnostics
+        # --- Camera info / metadata / IMU ---
+        - /front_camera/camera/color/camera_info
+        - /front_camera/camera/color/metadata
+        - /front_camera/camera/depth/camera_info
+        - /front_camera/camera/depth/metadata
+        - /front_camera/camera/infra1/camera_info
+        - /front_camera/camera/infra1/metadata
+        - /front_camera/camera/infra2/camera_info
+        - /front_camera/camera/infra2/metadata
+        - /front_camera/camera/aligned_depth_to_color/camera_info
+        - /front_camera/camera/accel/sample
+        - /front_camera/camera/accel/imu_info
+        - /front_camera/camera/accel/metadata
+        - /front_camera/camera/gyro/sample
+        - /front_camera/camera/gyro/imu_info
+        - /front_camera/camera/gyro/metadata
+        - /front_camera/camera/extrinsics/depth_to_accel
+        - /front_camera/camera/extrinsics/depth_to_color
+        - /front_camera/camera/extrinsics/depth_to_gyro
+        - /front_camera/camera/extrinsics/depth_to_infra1
+        - /front_camera/camera/extrinsics/depth_to_infra2
+        - /back_camera/camera/color/camera_info
+        - /back_camera/camera/color/metadata
+        - /back_camera/camera/depth/camera_info
+        - /back_camera/camera/depth/metadata
+        - /back_camera/camera/infra1/camera_info
+        - /back_camera/camera/infra1/metadata
+        - /back_camera/camera/infra2/camera_info
+        - /back_camera/camera/infra2/metadata
+        - /back_camera/camera/aligned_depth_to_color/camera_info
+        - /back_camera/camera/accel/sample
+        - /back_camera/camera/accel/imu_info
+        - /back_camera/camera/accel/metadata
+        - /back_camera/camera/gyro/sample
+        - /back_camera/camera/gyro/imu_info
+        - /back_camera/camera/gyro/metadata
+        - /back_camera/camera/extrinsics/depth_to_accel
+        - /back_camera/camera/extrinsics/depth_to_color
+        - /back_camera/camera/extrinsics/depth_to_gyro
+        - /back_camera/camera/extrinsics/depth_to_infra1
+        - /back_camera/camera/extrinsics/depth_to_infra2
+        # --- Camera images (raw) ---
+        - /front_camera/camera/color/image_raw
+        - /front_camera/camera/depth/image_rect_raw
+        - /front_camera/camera/infra1/image_rect_raw
+        - /front_camera/camera/infra2/image_rect_raw
+        - /front_camera/camera/aligned_depth_to_color/image_raw
+        - /back_camera/camera/color/image_raw
+        - /back_camera/camera/depth/image_rect_raw
+        - /back_camera/camera/infra1/image_rect_raw
+        - /back_camera/camera/infra2/image_rect_raw
+        - /back_camera/camera/aligned_depth_to_color/image_raw
+        # --- TF / robot state / logs ---
+        - /tf
+        - /tf_static
+        - /robot_description
+        - /joint_states
+        - /diagnostics
+        - /rosout
+        # --- Localization outputs ---
+        - /odometry/local
+        - /odometry/global
+        - /odometry/gps
+        - /gps/filtered
+        - /accel/filtered
+        - /glim_ros/odom_corrected
+        - /visodom/odom
+        - /visodom/odom_info_lite
+        - /set_pose
+        - /initialpose
+        # --- Nav2 ---
+        - /cmd_vel
+        - /cmd_vel_nav
+        - /cmd_vel_teleop
+        - /preempt_teleop
+        - /goal_pose
+        - /waypoints
+        - /clicked_point
+        - /motion_target
+        - /plan
+        - /plan_smoothed
+        - /local_plan
+        - /transformed_global_plan
+        - /behavior_tree_log
+        - /speed_limit
+        - /slowdown
+        - /controller_selector
+        - /planner_selector
+        - /global_costmap/costmap
+        - /global_costmap/costmap_updates
+        - /global_costmap/footprint
+        - /global_costmap/published_footprint
+        - /local_costmap/costmap
+        - /local_costmap/costmap_updates
+        - /local_costmap/footprint
+        - /local_costmap/published_footprint
+        - /local_costmap/voxel_grid
+        - /local_costmap/clearing_endpoints
+        - /behavior_server/transition_event
+        - /bt_navigator/transition_event
+        - /controller_server/transition_event
+        - /planner_server/transition_event
+        - /smoother_server/transition_event
+        - /velocity_smoother/transition_event
+        - /waypoint_follower/transition_event
+        - /global_costmap/global_costmap/transition_event
+        - /local_costmap/local_costmap/transition_event
+      include_unpublished_topics: false
+      disable_keyboard_controls: true
+      qos_profile_overrides_path: "/home/ros/utils/recording/qos_overrides.yaml"
+    storage:
+      storage_id: "mcap"
+      storage_preset_profile: "fastwrite"
+      max_cache_size: 1073741824   # 1 GiB write cache (default 100 MiB)
