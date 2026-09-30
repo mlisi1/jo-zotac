@@ -76,6 +76,13 @@ def generate_launch_description():
         description='Whether to launch the localization stack'
     )
 
+    # Forwarded to the localization launch files (included launches inherit it)
+    launch_glim_view_arg = DeclareLaunchArgument(
+        'glim_view',
+        default_value='false',
+        description='Whether to open the GLIM viewer window (needs a display; GLIM dies if it is lost)'
+    )
+
     launch_localization_gps_arg = DeclareLaunchArgument(
         'localization_gps',
         default_value='false',
@@ -304,6 +311,7 @@ def generate_launch_description():
         launch_bunker_arg,
         launch_localization_arg,
         launch_localization_gps_arg,
+        launch_glim_view_arg,
         launch_navigation_arg,
         launch_navigation_gps_arg,
         imu_param_file_arg,  

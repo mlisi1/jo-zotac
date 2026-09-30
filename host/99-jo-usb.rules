@@ -12,3 +12,10 @@ ACTION=="add", SUBSYSTEM=="usb-serial", DRIVER=="ftdi_sio", ATTRS{idVendor}=="26
 # drop/corrupt frames ("Incomplete video frame detected"). Cost: a few hundred
 # mW at most, since idle devices no longer sleep.
 ACTION=="add", SUBSYSTEM=="usb", TEST=="power/control", ATTR{power/control}="on"
+
+# --- Disable USB3 link power management (U1/U2) on the RealSense ports ---
+# Separate from autosuspend: with LPM the link drops into U1 between packets
+# even while streaming, and the wake-up latency can truncate isochronous video
+# transfers ("Incomplete video frame detected"). The kernel had U1 enabled on
+# both D456 links. Writing usb3_lpm_permit on the parent port applies at once.
+ACTION=="add", SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTR{idVendor}=="8086", ATTR{idProduct}=="0b5c", RUN+="/bin/sh -c 'echo 0 > /sys%p/port/usb3_lpm_permit'"

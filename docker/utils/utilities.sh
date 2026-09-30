@@ -9,8 +9,10 @@ source /home/ros/utils/save_map.bash
 source /home/ros/utils/recordings.bash
 alias no_gpu='__NV_PRIME_RENDER_OFFLOAD=0 __GLX_VENDOR_LIBRARY_NAME='
 
-alias full_navigation='ros2 launch jo_bringup jo_bringup.launch.py front_cam:=true localization:=true navigation:=true rviz:=true'
-alias full_gps_navigation='ros2 launch jo_bringup jo_bringup.launch.py front_cam:=true gnss:=true localization_gps:=true navigation_gps:=true rviz:=true'
+alias full_navigation='ros2 launch jo_bringup jo_bringup.launch.py front_cam:=true localization:=true navigation:=true rviz:=true back_cam:=true'
+alias full_gps_navigation='ros2 launch jo_bringup jo_bringup.launch.py front_cam:=true gnss:=true localization_gps:=true navigation_gps:=true rviz:=true back_cam:=true'
 
 alias extract_videos='bash /home/ros/utils/extract_camera_videos.sh'
+alias export_vslam='bash /home/ros/utils/export_vslam_map.sh'
+alias open_vslam='bash /home/ros/utils/open_vslam_map.sh'
 

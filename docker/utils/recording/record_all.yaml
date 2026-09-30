@@ -1,5 +1,5 @@
 # Full recording: sensors with RAW images + localization + nav2 diagnostics.
-# Topics: 125. Usage (see docker/utils/recordings.bash):
+# Topics: 130. Usage (see docker/utils/recordings.bash):
 #   ros2 run rosbag2_transport recorder --ros-args \
 #     --params-file /home/ros/utils/recording/record_all.yaml \
 #     -p storage.uri:=/home/ros/bags/<timestamp>_<name>
@@ -103,6 +103,14 @@
         - /visodom/odom_info_lite
         - /set_pose
         - /initialpose
+        # --- RTAB-Map visual SLAM (localization vslam:=true) ---
+        # Heavy topics (mapData, cloud_map, octomap_*) are left out: the same
+        # data is in /saved_maps/*_rtabmap/rtabmap.db.
+        - /visodom/info
+        - /visodom/mapGraph
+        - /visodom/mapPath
+        - /visodom/map
+        - /visodom/localization_pose
         # --- Nav2 ---
         - /cmd_vel
         - /cmd_vel_nav
