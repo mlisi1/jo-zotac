@@ -25,6 +25,10 @@ services:
       - ./jo_bringup:/home/ros/src/jo_bringup
       - ./jo_description:/home/ros/src/jo_description
       - ./jo_navigation:/home/ros/src/jo_navigation
+      - ./jo_msgs:/home/ros/src/jo_msgs
+      - ./glim:/home/ros/src/glim
+      - ./glim_ros2:/home/ros/src/glim_ros2
+      - ./onboard_detector_v2:/home/ros/src/onboard_detector_v2
       - ~/.Xauthority:/tmp/.Xauthority:ro
       - ./saved_maps:/saved_maps
       - ./bags:/home/ros/bags

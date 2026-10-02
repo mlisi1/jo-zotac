@@ -16,3 +16,6 @@ alias extract_videos='bash /home/ros/utils/extract_camera_videos.sh'
 alias export_vslam='bash /home/ros/utils/export_vslam_map.sh'
 alias open_vslam='bash /home/ros/utils/open_vslam_map.sh'
 
+
+# glim/glim_ros2 are volume-mounted but not rebuilt by the entrypoint (too heavy)
+alias build_glim='(cd /home/ros && colcon build --packages-select glim glim_ros --cmake-args -DCMAKE_BUILD_TYPE=Release) && source /home/ros/install/setup.bash'

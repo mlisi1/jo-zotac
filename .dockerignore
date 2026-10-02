@@ -1,0 +1,9 @@
+# Only jo_msgs, glim, glim_ros2, onboard_detector_v2 and docker/ are COPY'd
+bags/
+saved_maps/
+**/.git
+**/build/
+**/install/
+**/log/
+**/__pycache__/
+**/*.pyc

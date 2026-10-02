@@ -22,6 +22,11 @@ to confirm that everything works fine.
 ## Usage
 The dockerfile already clones and built all the packages needed to interface with the sensors. The `jo_bringup` package is instead shared as a volume and built when the docker is started up as a symlink. This allows to edit the launch or config files without the need to rebuild the docker or the packages.
 
+The following packages are also shared as volumes (git submodules, run `git submodule update --init` after cloning):
+- `glim` / `glim_ros2` - [giacomotambe/glim](https://github.com/giacomotambe/glim) and [giacomotambe/glim_ros2](https://github.com/giacomotambe/glim_ros2), GLIM with dynamic object rejection. They are built inside the image and **not** rebuilt at startup: after editing them run `build_glim` inside the container.
+- `onboard_detector_v2` - [ducciopet/onboard_detector_v2](https://github.com/ducciopet/onboard_detector_v2), lidar/camera dynamic obstacle detection and tracking. Rebuilt incrementally (symlink) at startup.
+- `jo_msgs` - obstacle messages shared by `onboard_detector_v2`, `glim_ros2` and the `jo_navigation` dynamic obstacle costmap layer. Rebuilt at startup.
+
 To run the bringup package, open a terminal and run 
 ```bash
 docker compose up
@@ -50,6 +55,7 @@ Given that the launch commands can be quite long, some aliases to quickly run so
 + ```glim_only``` - Only launches glim SLAM
 + ```glim_sim``` - Launches glim SLAM with ```use_sim_time:=true```
 + ```offline_viewer``` - Opens glim's offline viewer to analyze created maps
++ ```build_glim``` - Rebuilds the volume-mounted `glim` and `glim_ros2` packages
 + ```bunker_only``` - Launches Bunker command interface
 + ```save_map <map_name>``` - Saves the last map created by glim in the folder ```saved_maps/YYYYMMDD_HHMMSS_<map_name>```
 + ```localization``` - Launches local odometry module
