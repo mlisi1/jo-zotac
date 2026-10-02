@@ -1,11 +1,14 @@
+name: jo-zotac-dynamic-slam
+
 services:
-  jo-zotac:
+  jo-zotac-dynamic-slam:
     build:
       network: host
       context: .
       dockerfile: docker/Dockerfile
     privileged: true
-    image: jo-zotac
+    image: jo-zotac-dynamic-slam
+    container_name: jo-zotac-dynamic-slam
     stdin_open: true
     tty: true
     network_mode: host

@@ -1,6 +1,8 @@
 # Jo-zotac
 Jo-zotac is a dockerfile image containing all the software needed to interface with AgileX Bunker Pro and its sensors (Jo). 
 
+> **Branch `jo-zotac-dynamic-slam`:** adds GLIM with dynamic object rejection, `onboard_detector_v2` and the nav2 `dynamic_obstacle_layer`. Its compose project, service, image and container are all named `jo-zotac-dynamic-slam`, so it can coexist with the original `jo-zotac` image/container.
+
 ## Installation
 ### Docker configuration
 To correctly install the docker with GPU access, these steps need to be followed:
@@ -15,7 +17,7 @@ docker compose up --build
 ```
 After the docker is built, run:
 ```bash
-docker compose up -d && docker compose exec jo-zotac bash -c "nvidia-smi"
+docker compose up -d && docker compose exec jo-zotac-dynamic-slam bash -c "nvidia-smi"
 ```
 to confirm that everything works fine. 
 
@@ -33,7 +35,7 @@ docker compose up
 ```
 Then, in another terminal run
 ```bash
-docker compose exec jo-zotac ros2 launch jo_bringup jo_bringup.launch.py
+docker compose exec jo-zotac-dynamic-slam ros2 launch jo_bringup jo_bringup.launch.py
 ```
 By default this will launch the IMU interface and the lidar interface. It is possible to customize what is launched using the provided parameters. These are booleans that decide wether that module is launched or not.
 ### Module launch file parameters
