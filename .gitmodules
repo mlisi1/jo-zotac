@@ -11,3 +11,7 @@
 [submodule "onboard_detector_v2"]
 	path = onboard_detector_v2
 	url = https://github.com/ducciopet/onboard_detector_v2.git
+[submodule "jo_navigation"]
+	path = jo_navigation
+	url = https://github.com/mlisi1/jo_navigation.git
+	branch = dynamic-obstacle-layer

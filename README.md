@@ -27,7 +27,7 @@ The dockerfile already clones and built all the packages needed to interface wit
 The following packages are also shared as volumes (git submodules, run `git submodule update --init` after cloning):
 - `glim` / `glim_ros2` - [giacomotambe/glim](https://github.com/giacomotambe/glim) and [giacomotambe/glim_ros2](https://github.com/giacomotambe/glim_ros2), GLIM with dynamic object rejection. They are built inside the image and **not** rebuilt at startup: after editing them run `build_glim` inside the container.
 - `onboard_detector_v2` - [ducciopet/onboard_detector_v2](https://github.com/ducciopet/onboard_detector_v2), lidar/camera dynamic obstacle detection and tracking. Rebuilt incrementally (symlink) at startup.
-- `jo_navigation` - on this branch it is a plain folder, not a submodule: a copy of [mlisi1/jo_navigation](https://github.com/mlisi1/jo_navigation) at `7781883` plus the nav2 `dynamic_obstacle_layer` costmap plugin (enabled in `config/nav2_local.yaml`).
+- `jo_navigation` - [mlisi1/jo_navigation](https://github.com/mlisi1/jo_navigation), branch `dynamic-obstacle-layer`: adds the nav2 `dynamic_obstacle_layer` costmap plugin (enabled in `config/nav2_local.yaml`).
 - `jo_msgs` - obstacle messages shared by `onboard_detector_v2`, `glim_ros2` and the `jo_navigation` dynamic obstacle costmap layer. Rebuilt at startup.
 
 To run the bringup package, open a terminal and run 
