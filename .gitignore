@@ -4,3 +4,8 @@ bags/*
 *.zip
 *.sha256    
 *.md
+calibration/external/*
+calibration/runs/*
+!calibration/external/.gitkeep
+!calibration/runs/.gitkeep
+*.pyc

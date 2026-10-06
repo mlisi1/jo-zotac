@@ -29,6 +29,7 @@ services:
       - ./saved_maps:/saved_maps
       - ./bags:/home/ros/bags
       - ./docker/utils:/home/ros/utils
+      - ./calibration:/home/ros/calibration
     env_file:
       - .env
     environment:

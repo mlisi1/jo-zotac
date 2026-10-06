@@ -1,0 +1,19 @@
+# Static IMU for Allan variance (CALIBRATION.md 3). Record 2-3 h, robot still.
+# Usage: record_calib imu_static <name>   (see docker/utils/recordings.bash)
+# Indexed MCAP (no fastwrite): calibration bags are small and get re-read many times.
+/**:
+  ros__parameters:
+    record:
+      topics:
+        - /imu/data
+        - /imu/mag
+        - /temperature
+        - /status
+        - /tf_static
+      include_unpublished_topics: false
+      disable_keyboard_controls: true
+      qos_profile_overrides_path: "/home/ros/utils/recording/qos_overrides.yaml"
+    storage:
+      storage_id: "mcap"
+      storage_preset_profile: "none"
+      max_cache_size: 1073741824

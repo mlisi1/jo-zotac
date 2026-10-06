@@ -1,0 +1,20 @@
+# LiDAR-IMU rotation/time offset and straight-drive yaw (CALIBRATION.md 6.2, 7). Run GLIM too if you want /glim_ros/odom for straight_drive_yaw.py.
+# Usage: record_calib motion <name>   (see docker/utils/recordings.bash)
+# Indexed MCAP (no fastwrite): calibration bags are small and get re-read many times.
+/**:
+  ros__parameters:
+    record:
+      topics:
+        - /velodyne_points
+        - /velodyne_packets
+        - /imu/data
+        - /glim_ros/odom
+        - /tf_static
+        - /robot_description
+      include_unpublished_topics: false
+      disable_keyboard_controls: true
+      qos_profile_overrides_path: "/home/ros/utils/recording/qos_overrides.yaml"
+    storage:
+      storage_id: "mcap"
+      storage_preset_profile: "none"
+      max_cache_size: 1073741824

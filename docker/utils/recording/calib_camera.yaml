@@ -1,0 +1,20 @@
+# Camera-LiDAR (CALIBRATION.md 9): raw colour + camera_info of both cameras, LiDAR, static TF.
+# Usage: record_calib camera <name>   (see docker/utils/recordings.bash)
+# Indexed MCAP (no fastwrite): calibration bags are small and get re-read many times.
+/**:
+  ros__parameters:
+    record:
+      topics:
+        - /velodyne_points
+        - /front_camera/camera/color/image_raw
+        - /front_camera/camera/color/camera_info
+        - /back_camera/camera/color/image_raw
+        - /back_camera/camera/color/camera_info
+        - /tf_static
+      include_unpublished_topics: false
+      disable_keyboard_controls: true
+      qos_profile_overrides_path: "/home/ros/utils/recording/qos_overrides.yaml"
+    storage:
+      storage_id: "mcap"
+      storage_preset_profile: "none"
+      max_cache_size: 1073741824
