@@ -4,3 +4,6 @@
 [submodule "jo_navigation"]
 	path = jo_navigation
 	url = https://github.com/mlisi1/jo_navigation.git
+[submodule "tools/jo_remote_control_app"]
+	path = tools/jo_remote_control_app
+	url = https://github.com/gdl-res/jo_remote_control_app.git
