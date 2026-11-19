@@ -4,8 +4,8 @@
 #   GLIM dump (graph, submaps: opens in offline_viewer), map.pcd, map.pgm/map.yaml (nav2_map_server)
 #   and map_anchor.txt. The service saves in a background thread and returns at once, so this waits
 #   until map.yaml is written and the folder is quiet, then adds <name> to the folder.
-# GLIM stopped: copies /tmp/dump, which GLIM writes at shutdown (same files). It holds the LAST run
-#   only: the next GLIM start overwrites it, and it is lost when the container is recreated.
+# GLIM stopped: copies /saved_maps/glim_last_run, which GLIM writes at shutdown (same files). It holds
+#   the LAST run only: the next GLIM start clears it (jo_navigation launch/glim_common.py).
 save_map() {
     if [ $# -eq 0 ]; then
         echo "Usage: save_map <name>"
@@ -41,9 +41,9 @@ save_map() {
     fi
 
     # GLIM not running: the shutdown dump
-    local source_path="/tmp/dump"
+    local source_path="${dest_dir}/glim_last_run"
     if [ ! -d "$source_path" ]; then
-        echo "Error: GLIM is not running and there is no $source_path (no GLIM run in this container)"
+        echo "Error: GLIM is not running and there is no $source_path (GLIM never ran with this /saved_maps, or a new GLIM run is starting)"
         return 1
     fi
     echo "GLIM is not running: copying its shutdown dump $source_path (written $(date -r "$source_path" '+%F %T'))"
