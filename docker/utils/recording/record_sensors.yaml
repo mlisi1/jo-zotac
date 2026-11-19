@@ -1,5 +1,5 @@
 # Sensors only (for offline reprocessing / calibration): compressed images, no nav/localization.
-# Topics: 75. Usage (see docker/utils/recordings.bash):
+# Topics: 77. Usage (see docker/utils/recordings.bash):
 #   ros2 run rosbag2_transport recorder --ros-args \
 #     --params-file /home/ros/utils/recording/record_sensors.yaml \
 #     -p storage.uri:=/home/ros/bags/<timestamp>_<name>
@@ -27,6 +27,9 @@
         - /pressure
         - /temperature
         - /status
+        # --- Bunker base ---
+        - /odom               # track odometry (bunker_base)
+        - /bunker_status      # motors, battery, errors
         # --- GNSS / RTK ---
         - /gnss
         - /gnss_pose

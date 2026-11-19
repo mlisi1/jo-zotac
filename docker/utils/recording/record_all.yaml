@@ -1,5 +1,5 @@
 # Full recording: sensors with RAW images + localization + nav2 diagnostics.
-# Topics: 133. Usage (see docker/utils/recordings.bash):
+# Topics: 138. Usage (see docker/utils/recordings.bash):
 #   ros2 run rosbag2_transport recorder --ros-args \
 #     --params-file /home/ros/utils/recording/record_all.yaml \
 #     -p storage.uri:=/home/ros/bags/<timestamp>_<name>
@@ -27,6 +27,9 @@
         - /pressure
         - /temperature
         - /status
+        # --- Bunker base ---
+        - /odom               # track odometry (bunker_base)
+        - /bunker_status      # motors, battery, errors
         # --- GNSS / RTK ---
         - /gnss
         - /gnss_pose
@@ -94,6 +97,7 @@
         - /rosout
         # --- Localization outputs ---
         - /odometry/local
+        - /odometry/filtered     # EKF output in local mode (localization.launch.py)
         - /odometry/global
         - /odometry/gps
         - /gps/filtered
@@ -102,6 +106,8 @@
         - /glim_ros/odom_corrected
         - /glim_ros/odometry/local     # EKF input (glim_ros2@dev)
         - /glim_ros/odometry/global
+        - /glim_ros/grid             # occupancy grid (latched)
+        - /glim_ros/imu_bias_with_cov  # IMU bias estimate, per scan
         - /visodom/odom
         - /visodom/odom_info_lite
         - /set_pose
