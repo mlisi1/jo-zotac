@@ -39,6 +39,9 @@ RUN apt update -y \
     ros-${DISTRO}-nav2-rviz-plugins \
     ros-${DISTRO}-nav2-graceful-controller \
     ros-${DISTRO}-robot-localization \
+    ros-${DISTRO}-std-srvs \
+    ros-${DISTRO}-diagnostic-updater \
+    ros-${DISTRO}-diagnostic-msgs \
     zenity \
     python3-rosdep \
     software-properties-common \
@@ -73,21 +76,43 @@ RUN wget -q https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/
  && wget -q https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/cuda-ubuntu2404.pin \
  && mv cuda-ubuntu2404.pin /etc/apt/preferences.d/cuda-repository-pin-600 
 
-ENV CUDAToolkit_ROOT=/usr/local/cuda
+# GTSAM 4.3 and iridescence from the koide3 PPA; gtsam_points from source (see GTSAM_POINTS_REF).
+# Keep CUDA / GTSAM / gtsam_points / GLIM / glim_ros2 in sync with jo_sim's Dockerfile.
+ARG CUDA_VERSION=13-1
+ARG CUDA_DIR=13.1
+RUN curl -s https://koide3.github.io/ppa/setup_ppa.sh | bash \
+ && add-apt-repository -y ppa:koide3/iridescence \
+ && apt update -y \
+ && apt install -y libiridescence-dev \
+    libgtsam-notbb-dev \
+    cuda-cudart-dev-${CUDA_VERSION} \
+    cuda-nvcc-${CUDA_VERSION} \
+    cuda-cccl-${CUDA_VERSION} \
+    cuda-driver-dev-${CUDA_VERSION} \
+    libcurand-dev-${CUDA_VERSION} \
+    libcusparse-dev-${CUDA_VERSION} \
+    libcusolver-dev-${CUDA_VERSION} \
+ && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-RUN curl -s https://koide3.github.io/ppa/setup_ppa.sh | sudo bash
-RUN sudo add-apt-repository -y ppa:koide3/iridescence
-RUN apt update -y \
-    && apt install -y libiridescence-dev \
-    libgtsam-points-cuda13.1-dev \
-    cuda-cudart-13-1 \
-    cuda-nvcc-13-1 \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+ENV PATH=/usr/local/cuda-${CUDA_DIR}/bin:${PATH}
+# ${VAR:+:$VAR}: no trailing ':' when unset (an empty entry means the current directory)
+ENV LD_LIBRARY_PATH=/usr/local/cuda-${CUDA_DIR}/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
+ENV CUDAToolkit_ROOT=/usr/local/cuda-${CUDA_DIR}
 
-
-ENV PATH=/usr/local/cuda-13.1/bin:${PATH}
-ENV LD_LIBRARY_PATH=/usr/local/cuda-13.1/lib64:${LD_LIBRARY_PATH}
-ENV CUDAToolkit_ROOT=/usr/local/cuda-13.1
+# koide3/gtsam_points from source: GLIM master needs IndexedSlidingWindow::has_index, which is
+# newer than the last release (1.2.2, the newest in the koide3 PPA).
+ARG GTSAM_POINTS_REF=8e94654558dfbe7ddb0341de300daaf17e25ee02
+# CUDA architectures ("native" can't work: no GPU during docker build). 89 = RTX 3500 Ada
+# (the Zotac). Use all-major for any GPU (slower build). Overridable from .env (compose.yaml).
+ARG CUDA_ARCHS=89
+ARG BUILD_JOBS=8
+RUN mkdir -p /tmp/gtsam_points && cd /tmp/gtsam_points && git init -q \
+ && git remote add origin https://github.com/koide3/gtsam_points.git \
+ && git fetch -q --depth 1 origin ${GTSAM_POINTS_REF} && git checkout -q FETCH_HEAD \
+ && cmake -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_WITH_CUDA=ON \
+      -DCMAKE_CUDA_ARCHITECTURES="${CUDA_ARCHS}" \
+ && cmake --build build -j${BUILD_JOBS} && cmake --install build \
+ && ldconfig && rm -rf /tmp/gtsam_points
 
 USER ros
 RUN sudo usermod -aG dialout ros
@@ -102,18 +127,15 @@ RUN cd src/ && git clone https://github.com/ros-drivers/velodyne.git
 # IMU
 RUN cd src && git clone --branch ros2 https://github.com/mlisi1/Xsens_MTi_ROS_Driver_and_Ntrip_Client.git
 
-# GLIM
-RUN cd src && git clone https://github.com/mlisi1/glim_ros2.git
-
-
-# Pinned past v1.2.1 to commit a9be365, which fixes ImuFactor-related build
-# errors (koide3/glim#306) caused by GTSAM 4.3's templated ImuFactor/
-# PreintegratedImuMeasurements no longer matching glim's old forward declarations.
-RUN mkdir src/glim && cd src/glim \
-    && git init \
+# GLIM: koide3/glim >= 1a197c9 is needed by glim_ros2@dev (contains the a9be365 GTSAM 4.3
+# ImuFactor fix, koide3/glim#306). glim_ros2: mlisi1 fork, branch dev (pinned commit).
+ARG GLIM_REF=1a197c999e4865f5cab7c9cd25474128413ebbca
+ARG GLIM_ROS_REF=74d3eba
+RUN mkdir src/glim && cd src/glim && git init -q \
     && git remote add origin https://github.com/koide3/glim.git \
-    && git fetch --depth 1 origin a9be365001e571ef4b16cfbd74bf1da82672480b \
-    && git checkout FETCH_HEAD
+    && git fetch -q --depth 1 origin ${GLIM_REF} && git checkout -q FETCH_HEAD
+RUN cd src && git clone -q --branch dev https://github.com/mlisi1/glim_ros2.git \
+    && cd glim_ros2 && git checkout -q ${GLIM_ROS_REF}
 
 # Agilex Bunker
 RUN cd src && git clone https://github.com/mlisi1/ugv_sdk.git
@@ -137,6 +159,16 @@ RUN source /opt/ros/jazzy/setup.bash \
 # would) OOMs on 32GB. Build them one package at a time, capped to 8 make jobs each.
 RUN source /opt/ros/jazzy/setup.bash \
  && MAKEFLAGS="-j6" colcon build --packages-select-regex '^rtabmap.*' --executor sequential --cmake-args -DRTABMAP_SYNC_MULTI_RGBD=ON -DRTABMAP_SYNC_USER_DATA=ON -DCMAKE_BUILD_TYPE=Release
+
+# Optional glim_ros2 commit on top of the cached workspace: setting GLIM_ROS_COMMIT (in .env)
+# checks it out and rebuilds only glim_ros (minutes), not the whole workspace and RTAB-Map.
+# Declared here, not at the top, so changing it doesn't invalidate the earlier layers.
+ARG GLIM_ROS_COMMIT=
+RUN if [ -n "${GLIM_ROS_COMMIT}" ]; then \
+      cd src/glim_ros2 && git fetch -q origin && git checkout -q "${GLIM_ROS_COMMIT}" \
+   && cd ~ && source /opt/ros/jazzy/setup.bash \
+   && colcon build --packages-select glim_ros --cmake-args -DCMAKE_BUILD_TYPE=Release ; \
+    else echo "glim_ros2 at GLIM_ROS_REF=${GLIM_ROS_REF}" ; fi
 
 COPY docker/entrypoint.sh /entrypoint.sh
 RUN sudo chmod +x /entrypoint.sh
