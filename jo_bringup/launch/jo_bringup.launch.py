@@ -1,16 +1,13 @@
 from launch import LaunchDescription
 from launch_ros.actions import Node
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.actions import IncludeLaunchDescription, SetEnvironmentVariable, DeclareLaunchArgument, ExecuteProcess, RegisterEventHandler, OpaqueFunction
+from launch.actions import IncludeLaunchDescription, SetEnvironmentVariable, DeclareLaunchArgument, ExecuteProcess, RegisterEventHandler, OpaqueFunction, GroupAction, SetLaunchConfiguration, LogInfo
 from ament_index_python.packages import get_package_share_directory
 from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration
-from launch.event_handlers import OnShutdown, OnProcessExit
+from launch.event_handlers import OnShutdown
 import os
 import tempfile
-from launch.actions import TimerAction
-from launch_ros.actions import PushRosNamespace
-from launch.actions import GroupAction
 
 
 def generate_launch_description():
@@ -34,10 +31,20 @@ def generate_launch_description():
         description='Whether to launch the GNSS stack (needs imu:=true)'
     )
 
+    # RViz: one instance, owned by this file (the included navigation launches get rviz:=false).
+    # The aliases pass rviz_config, so appending rviz:=true opens the view that fits the alias.
     launch_rviz_arg = DeclareLaunchArgument(
-        'sens_rviz',
+        'rviz',
         default_value='false',
-        description='Launch RViz2 if true'
+        description='Launch RViz with rviz_config'
+    )
+
+    rviz_config_arg = DeclareLaunchArgument(
+        'rviz_config',
+        default_value='',
+        description='RViz view: sensors, navigation, gps_navigation (jo_bringup/rviz/<name>.rviz) or a '
+                    '.rviz path. Empty: picked from the stacks launched (navigation_gps/localization_gps '
+                    '-> gps_navigation, navigation/localization -> navigation, else sensors)'
     )
 
     launch_lidar_arg = DeclareLaunchArgument(
@@ -133,7 +140,6 @@ def generate_launch_description():
 
 
     # CONFIG PATHS
-    rviz_config = os.path.join(self_pkg, 'config', 'jo.rviz')
     imu_param = os.path.join(self_pkg, 'config', 'imu', 'xsens_mti_node.yaml')
     gnss_param = os.path.join(self_pkg, 'config', 'imu', 'ntrip-param.yaml')
     front_cam_config = os.path.join(self_pkg, 'config', 'cameras', 'front_d455.yaml')
@@ -255,29 +261,59 @@ def generate_launch_description():
     )  
 
 
-    navigation = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(navigation_launch),          
-        condition=IfCondition(LaunchConfiguration('navigation'))
-    )  
+    # Scoped rviz:=false: this file runs the only RViz
+    navigation = GroupAction(
+        scoped=True,
+        condition=IfCondition(LaunchConfiguration('navigation')),
+        actions=[
+            SetLaunchConfiguration('rviz', 'false'),
+            IncludeLaunchDescription(PythonLaunchDescriptionSource(navigation_launch)),
+        ],
+    )
 
-    navigation_gps = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(navigation_gps_launch),          
-        condition=IfCondition(LaunchConfiguration('navigation_gps'))
-    )  
+    # Scoped rviz:=false: this file runs the only RViz
+    navigation_gps = GroupAction(
+        scoped=True,
+        condition=IfCondition(LaunchConfiguration('navigation_gps')),
+        actions=[
+            SetLaunchConfiguration('rviz', 'false'),
+            IncludeLaunchDescription(PythonLaunchDescriptionSource(navigation_gps_launch)),
+        ],
+    )
 
 
 
 
     # NODES 
 
-    rviz = Node(
-        package='rviz2',
-        executable='rviz2',
-        arguments=['-d', rviz_config],
-        output='screen',
-        emulate_tty=True,
-        condition=IfCondition(LaunchConfiguration('sens_rviz')),
-    )
+    def rviz_node(context, *args, **kwargs):
+        def on(name):
+            return LaunchConfiguration(name).perform(context).lower() in ('true', '1')
+        view = LaunchConfiguration('rviz_config').perform(context).strip()
+        if not view:
+            if on('navigation_gps') or on('localization_gps'):
+                view = 'gps_navigation'
+            elif on('navigation') or on('localization'):
+                view = 'navigation'
+            else:
+                view = 'sensors'
+        path = view if view.endswith('.rviz') else os.path.join(self_pkg, 'rviz', view + '.rviz')
+        if not os.path.isfile(path):
+            raise RuntimeError(f"rviz_config '{view}': {path} not found "
+                               f"(views: {sorted(f[:-5] for f in os.listdir(os.path.join(self_pkg, 'rviz')))})")
+        return [
+            LogInfo(msg=f'[jo_bringup] RViz view: {path}'),
+            Node(
+                package='rviz2',
+                executable='rviz2',
+                arguments=['-d', path],
+                output='screen',
+                emulate_tty=True,
+                parameters=[{'use_sim_time': on('use_sim_time')}],
+            ),
+        ]
+
+    rviz = OpaqueFunction(function=rviz_node, condition=IfCondition(LaunchConfiguration('rviz')))
     
     front_cam = Node(
         package='realsense2_camera',
@@ -305,7 +341,8 @@ def generate_launch_description():
         launch_imu_arg,
         launch_lidar_arg,
         launch_gnss_arg,
-        launch_rviz_arg,    
+        launch_rviz_arg,
+        rviz_config_arg,
         launch_front_cam_arg,
         launch_back_cam_arg,
         launch_bunker_arg,

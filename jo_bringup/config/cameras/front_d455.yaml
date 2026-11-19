@@ -192,6 +192,17 @@
     # ============= IMAGE TRANSPORT CONFIGURATION PARAMETERS =============
     #Image transport parameters
     camera:
+      # Aligned depth: only the transports anything uses (no theora/zstd/compressed topics)
+      aligned_depth_to_color:
+        image_raw:
+          enable_pub_plugins:
+          - image_transport/compressedDepth
+          - image_transport/raw
+      aligned_depth_to_infra1:
+        image_raw:
+          enable_pub_plugins:
+          - image_transport/compressedDepth
+          - image_transport/raw
       color:
         image_raw:
           enable_pub_plugins:
