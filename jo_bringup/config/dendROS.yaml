@@ -1,56 +1,275 @@
+# DendROS config for Jo (jo_bringup/config/dendROS.yaml). DendROS >= v1.1.0.
+#
+# Nodes are listed twice where the names differ: the launch prefix is the EXECUTABLE
+# ([glim_rosnode-2], [ekf_node-1]), `ros2 node list` shows the NODE name (/glim_ros,
+# /ekf_filter_node_odom).
+#
+# Group palette (hex, the same in every terminal; no yellow/orange/gold, no plain red):
+#   SENS  azure      #4FA3FF   sensor drivers
+#   BASE  pink       #FF6FB5   Bunker base + CAN
+#   GLIM  lavender   #B48CFF   GLIM (LiDAR-inertial SLAM)
+#   LOC   turquoise  #36D6C3   EKFs, navsat, RTAB-Map visual odometry / SLAM
+#   NAV   green      #5BD65B   Nav2
+#   MIS   white      @#FFFFFF  mission scripts
+#   SYS   grey       #8C8C8C   robot_state_publisher, RViz, Testudo, TF listeners (no badge)
+#
+# Keywords: ONLY messages ROS doesn't already colour, i.e. INFO lines and plain stdout (levels
+# checked in the sources: Nav2 jazzy, robot_localization jazzy-devel, GLIM / glim_ros2, Xsens /
+# NTRIP, send_gps_waypoints.py). WARN/ERROR lines are left alone. Same meaning everywhere:
+#   bold white        something starts: a goal, a mission, a bringup
+#   bold mint         it ended well: succeeded, reached, completed, active, saved
+#   bold crimson inv  it ended badly, at INFO level (rejected, failed waypoint, failed checks)
+#   bold violet       cancel / preempt / reset (operator or BT intervention)
+#   bold <group>      key facts of that subsystem (device, datum, UTM, mode, loaded modules)
+#
+# Global settings come from ~/.config/dendROS/defaults.yaml (volume: docker/utils/dendROS/,
+# the maintainer's host copy). There's no `defaults:` section here, so nothing overrides them.
+
 groups:
 
-
   sensors:
-    color: blue
+    color: "#4FA3FF"
     label: "SENS"
     nodes:
-      - bunker_base_node
-      - ntrip_client
-      - realsense2_camera_node
-      - frame_latency
-      - camera
-      - xsens_mti_node
+      - velodyne_driver_node
       - velodyne_transform_node
       - velodyne_laserscan_node
-      - velodyne_driver_node
+      - "velodyne_*"
+      - xsens_mti_node
+      - ntrip              # executable
+      - ntrip_client       # node
+      - realsense2_camera_node   # executable; nodes /front_camera/camera, /back_camera/camera
+      - camera
+      - frame_latency
+    highlight:
+      # Xsens (INFO)
+      - word: "Found a device with ID: \\S+"
+        regex: true
+        color: "@#4FA3FF"
+      - word: "Device: .* opened\\."
+        regex: true
+        color: "bold mint"
+      - word: "Firmware version: \\S+"
+        regex: true
+        color: "@#4FA3FF"
+      - word: "Onboard Kalman Filter Option: .*"
+        regex: true
+        color: "@#4FA3FF"
+      # NTRIP (INFO)
+      - word: "NTRIP connection established successfully"
+        color: "bold mint"
+      - word: "Attempting to connect to NTRIP caster"
+        color: "@#FFFFFF"
+      - word: "Connection closed by server"
+        color: "bold crimson"
+        inverted: true
+      - word: "Mountpoint: \\S+"
+        regex: true
+        color: "@#4FA3FF"
+      # RealSense (INFO; strings from the driver as I know it, to check on the robot)
+      - word: "RealSense Node Is Up!"
+        color: "bold mint"
+      - word: "Device with serial number \\d+ was found"
+        regex: true
+        color: "@#4FA3FF"
 
+  base:
+    color: "#FF6FB5"
+    label: "BASE"
+    nodes:
+      - bunker_base_node
+      - bunker_base
+      - "bash"             # can_up.sh / can_down.sh (ExecuteProcess, plain stdout)
+    highlight:
+      - word: "CAN interface up!"
+        color: "bold mint"
+      - word: "CAN interface down!"
+        color: "bold violet"
+
+  glim:
+    color: "#B48CFF"
+    label: "GLIM"
+    nodes:
+      - glim_rosnode       # executable
+      - glim_ros           # node
+      - rviz_viewer        # node of GLIM's ROS output module
+    highlight:
+      - word: "load lib\\w+\\.so"
+        regex: true
+        color: "@#B48CFF"
+      - word: "TF: .*"          # the TF ownership summary at start
+        regex: true
+        color: "@#B48CFF"
+      - word: "auto-detected (IMU|LiDAR) frame ID: \\S+"
+        regex: true
+        color: "@#B48CFF"
+      - word: "(map saved to|saving to) \\S+"
+        regex: true
+        color: "bold mint"
+      - word: "saved \\S+ \\(.*\\)"
+        regex: true
+        color: "bold mint"
+      - word: "waiting for (odometry estimation|local mapping|global mapping)"
+        regex: true
+        color: "bold violet"
+      - word: "an extension module requested termination; shutting down"
+        color: "bold violet"
 
   localization:
-    color: yellow
+    color: "#36D6C3"
     label: "LOC"
     nodes:
-      - glim_rosnode
-      - ekf_*
+      - ekf_node           # executable (all EKFs)
+      - ekf_filter_node
+      - ekf_filter_node_odom
+      - ekf_filter_node_map
+      - "ekf_*"
       - navsat_transform_node
       - rgbd_odometry
       - rtabmap
       - rtabmap_viz
-
-
+      - "rgbd_*"
+      - "rtabmap_*"
+    highlight:
+      # navsat_transform (INFO)
+      - word: "Datum (\\(latitude, longitude, altitude\\)|\\S+ coordinate) is \\(.*\\)"
+        regex: true
+        color: "@#36D6C3"
+      - word: "UTM zone set to .*"
+        regex: true
+        color: "@#36D6C3"
+      - word: "Corrected for magnetic declination of \\S+"
+        regex: true
+        color: "@#36D6C3"
+      # EKF (INFO)
+      - word: "Received set_pose request"
+        color: "bold violet"
+      - word: "Received a request to reset filter"
+        color: "bold violet"
+      - word: "Enabling filter"
+        color: "bold mint"
+      # RTAB-Map odometry status line (INFO, every frame)
+      - word: "quality=\\d+"
+        regex: true
+        color: "@#36D6C3"
 
   navigation:
-    color: green
+    color: "#5BD65B"
     label: "NAV"
     nodes:
-      - gps_waypoint_follower
-      - behavior_server
-      - bt_navigator
       - controller_server
-      - lifecycle_manager_navigation
       - planner_server
       - smoother_server
-      - velocity_smoother
-      - waypoint_follower      
+      - behavior_server
+      - bt_navigator
       - bt_navigator_navigate_through_poses_rclcpp_node
       - bt_navigator_navigate_to_pose_rclcpp_node
+      - waypoint_follower
+      - gps_waypoint_follower
+      - velocity_smoother
+      - lifecycle_manager            # executable
+      - lifecycle_manager_navigation # node
       - global_costmap
-      - local_costmap    
+      - local_costmap
+      - component_container          # if use_composition:=True
+    highlight:
+      # A goal starts (all INFO)
+      - word: "Begin navigating .*"
+        regex: true
+        color: "@#FFFFFF"
+      - word: "Received follow waypoint request with \\d+ waypoints"
+        regex: true
+        color: "@#FFFFFF"
+      - word: "Received a goal, begin computing control effort"
+        color: "@#FFFFFF"
+      - word: "Starting a new loop, current loop count is \\d+"
+        regex: true
+        color: "@#FFFFFF"
+      # ... ends well
+      - word: "Goal succeeded"
+        color: "bold mint"
+      - word: "Reached the goal!"
+        color: "bold mint"
+      - word: "(Succeeded processing|Arrived at) (waypoint )?\\d+('th waypoint)?"
+        regex: true
+        color: "bold mint"
+      - word: "Completed all \\d+ waypoints requested"
+        regex: true
+        color: "bold mint"
+      - word: "\\w+ completed successfully"      # behaviors: spin, backup, wait, ...
+        regex: true
+        color: "bold mint"
+      # ... ends badly, at INFO level (Goal failed is ERROR: already red)
+      - word: "Failed to process waypoint \\d+, moving to next"
+        regex: true
+        color: "bold crimson"
+        inverted: true
+      - word: "Action server is inactive. Rejecting the goal"
+        color: "bold crimson"
+        inverted: true
+      - word: "Initial checks failed for \\w+"
+        regex: true
+        color: "bold crimson"
+        inverted: true
+      # ... is cancelled / preempted
+      - word: "Goal (canceled|is canceling|was canceled)"
+        regex: true
+        color: "bold violet"
+      - word: "Cancellation was successful"
+        color: "bold violet"
+      - word: "(Received goal preemption request|Preempting the goal pose)"
+        regex: true
+        color: "bold violet"
+      - word: "Canceling \\w+"
+        regex: true
+        color: "bold violet"
+      # Recovery behaviors (behavior_server "Running spin" etc.)
+      - word: "Running (spin|backup|wait|drive_on_heading|assisted_teleop)\\b"
+        regex: true
+        color: "bold violet"
+      # Lifecycle bringup
+      - word: "Starting managed nodes bringup"
+        color: "@#FFFFFF"
+      - word: "Managed nodes are (active|now configured)"
+        regex: true
+        color: "bold mint"
+      - word: "Managed nodes have been (shut down|reset|paused|cleaned up)"
+        regex: true
+        color: "bold violet"
+      - word: "Successfully re-established connections from server respawns"
+        color: "bold mint"
 
+  mission:
+    color: "@#FFFFFF"
+    label: "MIS"
+    nodes:
+      - "send_gps_waypoints*"
+      - "heading_alignment*"
+    highlight:
+      - word: "Mission *: .*"
+        regex: true
+        color: "@#FFFFFF"
+      - word: "(AUTO|STEP) mode"
+        regex: true
+        case_sensitive: true
+        color: "@#FFFFFF"
+        inverted: true
+      - word: "Action server ready"
+        color: "bold mint"
+      - word: "Goal accepted, navigating"
+        color: "@#FFFFFF"
+      - word: "All waypoints completed"
+        color: "bold mint"
+      - word: "Interrupted by user"
+        color: "bold violet"
 
-
-defaults:
-  color_mode: tag_only
-  show_group_tag: true
-  unmatched_color: null
-  tag_style: inverted
+  system:
+    color: "#8C8C8C"
+    label: "SYS"
+    show_tag: false
+    nodes:
+      - robot_state_publisher
+      - rviz2
+      - "transform_listener_impl_*"
+      - testudo
+      - "testudo_*"
