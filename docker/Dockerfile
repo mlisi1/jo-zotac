@@ -170,7 +170,7 @@ RUN git clone -q --depth 1 --branch ${DENDROS_VERSION} https://github.com/mlisi1
  && bash /tmp/DendROS/install.sh -y \
  && sudo rm -rf /tmp/DendROS
 
-# Testudo (topic health), pinned to a release. Config: jo_bringup/config/testudo.yaml (mounted)
+# Testudo (topic health), pinned to a release
 ARG TESTUDO_VERSION=1.0.0
 RUN pip install --user --break-system-packages "textual>=6" \
  && git clone -q --depth 1 --branch ${TESTUDO_VERSION} https://github.com/mlisi1/testudo.git src/testudo \

@@ -17,9 +17,9 @@ alias extract_videos='bash /home/ros/utils/extract_camera_videos.sh'
 alias export_vslam='bash /home/ros/utils/export_vslam_map.sh'
 alias open_vslam='bash /home/ros/utils/open_vslam_map.sh'
 
-# Topic health (Testudo): live TUI against the robot interface in jo_bringup/config/testudo.yaml
-# (mounted source, so edits apply at the next start). health_headless: no TUI, results on
-# /testudo/overall and /testudo/<plugin> (scripts, remote checks).
-alias health='ros2 run testudo testudo watch -c /home/ros/src/jo_bringup/config/testudo.yaml'
-alias health_headless='ros2 run testudo testudo watch --headless -c /home/ros/src/jo_bringup/config/testudo.yaml'
+# Topic health (Testudo), default config: every topic is monitored, nothing is declared. A robot
+# config (thresholds, declared topics) comes after an on-board run. health_headless: no TUI,
+# results on /testudo/overall and /testudo/<plugin> (scripts, remote checks).
+alias health='ros2 run testudo testudo watch'
+alias health_headless='ros2 run testudo testudo watch --headless'
 
