@@ -1,5 +1,5 @@
 # Full recording: sensors with COMPRESSED images + localization + nav2 diagnostics.
-# Topics: 138. Usage (see docker/utils/recordings.bash):
+# Topics: 140. Usage (see docker/utils/recordings.bash):
 #   ros2 run rosbag2_transport recorder --ros-args \
 #     --params-file /home/ros/utils/recording/record_compressed.yaml \
 #     -p storage.uri:=/home/ros/bags/<timestamp>_<name>
@@ -95,6 +95,7 @@
         - /joint_states
         - /diagnostics
         - /rosout
+        - /parameter_events   # runtime parameter changes
         # --- Localization outputs ---
         - /odometry/local
         - /odometry/filtered     # EKF output in local mode (localization.launch.py)
@@ -108,6 +109,7 @@
         - /glim_ros/odometry/global
         - /glim_ros/grid             # occupancy grid (latched)
         - /glim_ros/imu_bias_with_cov  # IMU bias estimate, per scan
+        - /glim_ros/odometry/imu_rate  # IMU-rate (~400 Hz) propagated state, for latency analysis
         - /visodom/odom
         - /visodom/odom_info_lite
         - /set_pose
