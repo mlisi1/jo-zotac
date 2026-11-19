@@ -36,8 +36,11 @@ services:
       # DendROS global settings (defaults.yaml, the maintainer's host copy). A directory mount:
       # `dendros config` saves with an atomic rename, which a symlink or a file mount would not survive
       - ./docker/utils/dendROS:/home/ros/.config/dendROS
+    # NTRIP_USERNAME / NTRIP_PASSWORD (gnss:=true). Optional: without .env everything but the
+    # NTRIP client works. `required: false` needs Docker Compose >= 2.24
     env_file:
-      - .env
+      - path: .env
+        required: false
     environment:
       - DISPLAY=${DISPLAY}
       - NVIDIA_VISIBLE_DEVICES=all

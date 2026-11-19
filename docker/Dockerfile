@@ -1,6 +1,5 @@
 FROM osrf/ros:jazzy-desktop-full
 
-ENV GZ_VERSION=harmonic
 ARG DISTRO=jazzy
 
 RUN apt update -y \
@@ -12,13 +11,8 @@ RUN apt update -y \
 RUN apt update -y \
     && apt install -y ros-${DISTRO}-plotjuggler \
     ros-${DISTRO}-joint-state-publisher \
-    ros-${DISTRO}-joint-state-publisher-gui \
-    ros-${DISTRO}-gz-ros2-control \
     ros-${DISTRO}-teleop-twist-joy \
     ros-${DISTRO}-joy \
-    ros-${DISTRO}-pinocchio \
-    ros-${DISTRO}-ros2-control \
-    ros-${DISTRO}-ros2-controllers \
     ros-${DISTRO}-xacro \
     ros-${DISTRO}-rosbag2-storage-mcap \
     ros-${DISTRO}-rmw-cyclonedds-cpp \
@@ -142,11 +136,13 @@ RUN cd src && git clone -q --branch dev https://github.com/mlisi1/glim_ros2.git 
 RUN cd src && git clone https://github.com/mlisi1/ugv_sdk.git
 RUN cd src && git clone -b jazzy https://github.com/agilexrobotics/bunker_ros2.git
 
-RUN cd src && git clone https://github.com/sutharsan-311/nav2_config.git
-
-
-RUN cd src && git clone https://github.com/introlab/rtabmap.git
-RUN cd src && git clone --branch ros2 https://github.com/introlab/rtabmap_ros.git
+# RTAB-Map pinned to jo_sim's commits (same visual odometry / SLAM code in the sim and on the robot)
+ARG RTABMAP_REF=7d8b585217033e8d25d01b380a36744effe816df
+ARG RTABMAP_ROS_REF=3e1cdcb072ad21fa2b129412332760bd3e456279
+RUN for r in "rtabmap ${RTABMAP_REF}" "rtabmap_ros ${RTABMAP_ROS_REF}"; do set -- $r; \
+      mkdir -p src/$1 && git -C src/$1 init -q \
+   && git -C src/$1 remote add origin https://github.com/introlab/$1.git \
+   && git -C src/$1 fetch -q --depth 1 origin $2 && git -C src/$1 checkout -q FETCH_HEAD || exit 1; done
 
 SHELL ["/bin/bash", "-c"]
 
@@ -157,7 +153,7 @@ RUN source /opt/ros/jazzy/setup.bash \
 # The rtabmap/rtabmap_ros repos expand into ~14 rtabmap_* packages, several of
 # which (rtabmap, rtabmap_slam, rtabmap_sync, rtabmap_util, ...) are heavy per
 # compile unit. Building them all at once (as the full-workspace build above
-# would) OOMs on 32GB. Build them one package at a time, capped to 8 make jobs each.
+# would) OOMs on 32GB. Build them one package at a time, capped to 6 make jobs each.
 RUN source /opt/ros/jazzy/setup.bash \
  && MAKEFLAGS="-j6" colcon build --packages-select-regex '^rtabmap.*' --executor sequential --cmake-args -DRTABMAP_SYNC_MULTI_RGBD=ON -DRTABMAP_SYNC_USER_DATA=ON -DCMAKE_BUILD_TYPE=Release
 
