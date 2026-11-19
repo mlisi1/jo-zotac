@@ -33,6 +33,9 @@ services:
       - ./bags:/home/ros/bags
       - ./docker/utils:/home/ros/utils
       - ./calibration:/home/ros/calibration
+      # DendROS global settings (defaults.yaml, the maintainer's host copy). A directory mount:
+      # `dendros config` saves with an atomic rename, which a symlink or a file mount would not survive
+      - ./docker/utils/dendROS:/home/ros/.config/dendROS
     env_file:
       - .env
     environment:

@@ -1,6 +1,7 @@
 source /opt/ros/jazzy/setup.bash
 source /home/ros/install/setup.bash
 source /usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash
+
 alias sensors='ros2 launch jo_bringup jo_bringup.launch.py'
 alias full_sensors='ros2 launch jo_bringup jo_bringup.launch.py front_cam:=true back_cam:=true gnss:=true'
 alias bunker_only='ros2 launch jo_bringup jo_bringup.launch.py imu:=false lidar:=false bunker:=true'
@@ -15,4 +16,10 @@ alias full_gps_navigation='ros2 launch jo_bringup jo_bringup.launch.py front_cam
 alias extract_videos='bash /home/ros/utils/extract_camera_videos.sh'
 alias export_vslam='bash /home/ros/utils/export_vslam_map.sh'
 alias open_vslam='bash /home/ros/utils/open_vslam_map.sh'
+
+# Topic health (Testudo): live TUI against the robot interface in jo_bringup/config/testudo.yaml
+# (mounted source, so edits apply at the next start). health_headless: no TUI, results on
+# /testudo/overall and /testudo/<plugin> (scripts, remote checks).
+alias health='ros2 run testudo testudo watch -c /home/ros/src/jo_bringup/config/testudo.yaml'
+alias health_headless='ros2 run testudo testudo watch --headless -c /home/ros/src/jo_bringup/config/testudo.yaml'
 

@@ -1,0 +1,134 @@
+# Testudo (topic health) config for the real robot. jo_sim keeps its own copy
+# (jo_sim/config/testudo.yaml) for the same interface; keep the two in step.
+# Thresholds marked "to check" are first guesses: adjust them after a run on the robot.
+#
+#   health                         # alias in docker/utils/utilities.sh: live TUI (needs a terminal)
+#   health_headless                # no TUI: results on /testudo/overall, /testudo/<plugin>
+#
+# Topics not declared here still get liveness and rate checks. Images and 3D point clouds are
+# presence-only unless declared (a subscription costs bandwidth), so only the ones the stack
+# consumes are declared.
+severity_mode: worst
+publish:
+  rate_hz: 5.0
+  per_plugin: true
+  namespace: /testudo
+  topic: /diagnostics
+
+topics:
+  # ── Sensors (rates as on the robot) ──
+  sensor_msgs/msg/PointCloud2:
+    - name: /velodyne_points
+      weight: 3
+      thresholds:
+        rate_hz: {warn: 9.0, error: 5.0}
+  sensor_msgs/msg/LaserScan:
+    - name: /scan
+      weight: 1
+      thresholds:
+        rate_hz: {warn: 9.0, error: 5.0}
+        # The VLP-16 ring used for /scan sees open sky outdoors: many out-of-range readings are normal
+        invalid_ratio: {warn: 0.5, error: 0.8}
+  sensor_msgs/msg/Imu:
+    - name: /imu/data
+      weight: 3
+      thresholds:
+        rate_hz: {warn: 350.0, error: 200.0}   # Xsens at ~400 Hz (device setting, enable_deviceConfig false)
+  sensor_msgs/msg/NavSatFix:
+    - name: /gnss
+      weight: 2
+      # Rate and covariance: Testudo's defaults until checked on the robot (to check)
+  sensor_msgs/msg/Image:
+    - name: /front_camera/camera/color/image_raw
+      weight: 1
+      thresholds:
+        rate_hz: {warn: 25.0, error: 10.0}
+    - name: /back_camera/camera/color/image_raw
+      weight: 1
+      thresholds:
+        rate_hz: {warn: 25.0, error: 10.0}
+
+  # ── Localization (GLIM + EKF) ──
+  nav_msgs/msg/Odometry:
+    - name: /glim_ros/odometry/local
+      weight: 3
+    # Local mode (`localization`). With `localization_gps` the EKFs publish /odometry/local and
+    # /odometry/global instead, and this one shows as missing.
+    - name: /odometry/filtered
+      weight: 3
+      related_topics:
+        cmd_vel: /cmd_vel
+    # GLIM reports a configured constant covariance (1e-2 per axis: trace 0.03), not an estimate,
+    # so Testudo's default bound would always warn
+    - name: /glim_ros/odom
+      weight: 1
+      thresholds:
+        position_covariance_trace: {warn: 0.05, green: 0.05, orange: 0.2}
+    - name: /glim_ros/lidar_odom
+      weight: 1
+      thresholds:
+        position_covariance_trace: {warn: 0.05, green: 0.05, orange: 0.2}
+  diagnostic_msgs/msg/DiagnosticArray:
+    - name: /diagnostics   # GLIM's diagnostic_updater, 1 Hz
+      weight: 1
+      thresholds:
+        rate_hz: {warn: 0.8, error: 0.3}
+
+  # ── Navigation ──
+  nav_msgs/msg/OccupancyGrid:
+    - name: /local_costmap/costmap
+      weight: 2
+      thresholds:
+        rate_hz: {warn: 1.5, error: 0.5}   # publish_frequency 2.0
+    - name: /global_costmap/costmap
+      weight: 1
+      thresholds:
+        rate_hz: {warn: 0.7, error: 0.3}   # publish_frequency 1.0
+    # GLIM's occupancy grid is published only when the map changes: idle while the robot stands still
+    - name: /glim_ros/grid
+      event_driven: true
+  # Published only while a controller is following a path
+  geometry_msgs/msg/PoseStamped:
+    - name: /motion_target
+      event_driven: true
+  visualization_msgs/msg/Marker:
+    - name: /slowdown
+      event_driven: true
+  nav2_msgs/msg/BehaviorTreeLog:
+    - name: /behavior_tree_log
+      weight: 1
+  geometry_msgs/msg/Twist:
+    - name: /cmd_vel
+      event_driven: true
+    - name: /cmd_vel_nav
+      event_driven: true
+
+actions:
+  - name: navigate_to_pose
+    weight: 3
+    related_topics:
+      feedback: /navigate_to_pose/_action/feedback
+  - name: follow_waypoints
+    weight: 2
+  - name: spin
+    weight: 1
+  - name: backup
+    weight: 1
+
+tf:
+  # Localization chain (EKF owns odom->base_link, GLIM or navsat map->odom)
+  - {parent: map, child: odom}
+  - {parent: odom, child: base_link}
+  # Sensor frames the stack uses (static: robot_state_publisher and the RealSense driver)
+  - {parent: base_link, child: velodyne}
+  - {parent: base_link, child: imu_link}
+  - {parent: base_link, child: front_camera_color_optical_frame}
+  - {parent: base_link, child: front_camera_depth_optical_frame}
+  - {parent: base_link, child: back_camera_color_optical_frame}
+
+node_profiling:
+  enabled: true
+  # GLIM (GPU), RTAB-Map and the RealSense drivers are heavy by design
+  thresholds:
+    cpu_percent: {warn: 300}
+    memory_mb: {warn: 2000}

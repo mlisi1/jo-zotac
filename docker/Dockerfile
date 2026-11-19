@@ -5,6 +5,7 @@ ARG DISTRO=jazzy
 
 RUN apt update -y \
     && apt install -y pipx \
+    python3-pip \
     nano \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
@@ -160,6 +161,23 @@ RUN source /opt/ros/jazzy/setup.bash \
 RUN source /opt/ros/jazzy/setup.bash \
  && MAKEFLAGS="-j6" colcon build --packages-select-regex '^rtabmap.*' --executor sequential --cmake-args -DRTABMAP_SYNC_MULTI_RGBD=ON -DRTABMAP_SYNC_USER_DATA=ON -DCMAKE_BUILD_TYPE=Release
 
+COPY docker/entrypoint.sh /entrypoint.sh
+RUN sudo chmod +x /entrypoint.sh
+
+# DendROS (ros2 wrapper / TUI), pinned to a release: bump DENDROS_VERSION for a new one
+ARG DENDROS_VERSION=v1.1.0
+RUN git clone -q --depth 1 --branch ${DENDROS_VERSION} https://github.com/mlisi1/DendROS.git /tmp/DendROS \
+ && bash /tmp/DendROS/install.sh -y \
+ && sudo rm -rf /tmp/DendROS
+
+# Testudo (topic health), pinned to a release. Config: jo_bringup/config/testudo.yaml (mounted)
+ARG TESTUDO_VERSION=1.0.0
+RUN pip install --user --break-system-packages "textual>=6" \
+ && git clone -q --depth 1 --branch ${TESTUDO_VERSION} https://github.com/mlisi1/testudo.git src/testudo \
+ && source /opt/ros/jazzy/setup.bash \
+ && colcon build --packages-select testudo
+
+
 # Optional glim_ros2 commit on top of the cached workspace: setting GLIM_ROS_COMMIT (in .env)
 # checks it out and rebuilds only glim_ros (minutes), not the whole workspace and RTAB-Map.
 # Declared here, not at the top, so changing it doesn't invalidate the earlier layers.
@@ -170,12 +188,9 @@ RUN if [ -n "${GLIM_ROS_COMMIT}" ]; then \
    && colcon build --packages-select glim_ros --cmake-args -DCMAKE_BUILD_TYPE=Release ; \
     else echo "glim_ros2 at GLIM_ROS_REF=${GLIM_ROS_REF}" ; fi
 
-COPY docker/entrypoint.sh /entrypoint.sh
-RUN sudo chmod +x /entrypoint.sh
-
-RUN git clone https://github.com/mlisi1/DendROS && cd DendROS && bash install.sh -y
-
-RUN echo '[ -f /home/ros/utils/utilities.sh ] && source /home/ros/utils/utilities.sh' >> ~/.bashrc
+# ~/.config/dendROS is a volume (compose.yaml): create it as ros, or Docker makes ~/.config root-owned
+RUN mkdir -p ~/.config/dendROS \
+ && echo '[ -f /home/ros/utils/utilities.sh ] && source /home/ros/utils/utilities.sh' >> ~/.bashrc
 
 
 ENTRYPOINT ["/entrypoint.sh"]

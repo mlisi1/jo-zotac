@@ -9,3 +9,7 @@ calibration/runs/*
 !calibration/external/.gitkeep
 !calibration/runs/.gitkeep
 *.pyc
+# DendROS runtime state (written next to defaults.yaml by each launch)
+docker/utils/dendROS/node_colors.yaml
+docker/utils/dendROS/last_run/
+docker/utils/dendROS/*.tmp
