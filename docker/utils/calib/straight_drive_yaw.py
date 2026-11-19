@@ -8,7 +8,7 @@ Record GLIM odometry while driving STRAIGHT lines (>= 5 m each, both forwards an
 backwards, several times). The script finds the straight segments automatically and, for
 each, compares the direction of travel with the heading of the IMU frame:
 
-    psi = heading(IMU x-axis) - direction of travel   ==  IMU yaw on the robot (b2i_Y)
+    psi = heading(IMU x-axis) - direction of travel   ==  IMU yaw on the robot (imu.xacro imu_yaw)
 
 The LiDAR yaw on the robot follows from psi and the rotation in GLIM's T_lidar_imu.
 A tracked robot never drives perfectly straight; the chord of each segment is used, and
@@ -111,8 +111,8 @@ def main():
     R_li = Rotation.from_quat(cc.glim_T_lidar_imu(args.glim_config)[3:])
     R_bi = Rotation.from_euler("z", psi, degrees=True)
     yaw_lidar = (R_bi * R_li.inv()).as_euler("xyz", degrees=True)[2]
-    print(f"\nIMU yaw on the robot   (imu.xacro b2i_Y):      {psi:+.3f} deg = {math.radians(psi):+.5f} rad")
-    print(f"LiDAR yaw on the robot (velodyne.xacro b2l_Y): {yaw_lidar:+.3f} deg = {math.radians(yaw_lidar):+.5f} rad")
+    print(f"\nIMU yaw on the robot   (imu.xacro imu_yaw):     {psi:+.3f} deg = {math.radians(psi):+.5f} rad")
+    print(f"LiDAR yaw on the robot (base2lidar joint yaw):  {yaw_lidar:+.3f} deg = {math.radians(yaw_lidar):+.5f} rad")
     print("Only change the URDF if the value is consistent across runs and larger than ~0.5 deg.")
 
     result = {"segments": segs, "psi_forward_deg": m_f, "psi_backward_deg": m_b, "spread_deg": spread,

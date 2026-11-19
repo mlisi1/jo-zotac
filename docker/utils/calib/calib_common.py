@@ -103,6 +103,27 @@ def fmt_xyz_rpy(M, prefix):
                      for n, v in zip(names, list(xyz) + list(rpy)))
 
 
+def cad2base(core_xacro=os.path.join(os.path.dirname(URDF_XACRO), "robot_core.xacro")):
+    """(cad2base_x, cad2base_z) from robot_core.xacro: base_link = CAD point (x, 0, z); CAD z = 0 is the floor."""
+    txt = open(core_xacro).read()
+    get = lambda n: float(re.search(rf'name="{n}"\s+value="([-0-9.eE+]+)"', txt).group(1))
+    return get("cad2base_x"), get("cad2base_z")
+
+
+def fmt_cad(M, prefix, yaw_name):
+    """base_link_T_sensor as the CAD-frame xacro properties of jo_description (<prefix>_cad_x/y/z, yaw).
+    The CAD xacros have no roll/pitch properties: nonzero ones go into the joint rpy by hand."""
+    (x, y, z), (r, p, yw) = mat_to_xyz_rpy(M)
+    cx, cz = cad2base()
+    lines = [f'  <xacro:property name="{prefix}_cad_x" value="{x + cx:.5f}" />',
+             f'  <xacro:property name="{prefix}_cad_y" value="{y:.5f}" />',
+             f'  <xacro:property name="{prefix}_cad_z" value="{z + cz:.5f}" />',
+             f'  <xacro:property name="{yaw_name}" value="{yw:.5f}" />']
+    if abs(r) > 1e-4 or abs(p) > 1e-4:
+        lines.append(f"  (roll {r:+.5f}, pitch {p:+.5f} rad: no xacro property, set them in the joint rpy)")
+    return "\n".join(lines)
+
+
 # ----------------------------------------------------------------------------- current values
 
 def load_jsonc(path):

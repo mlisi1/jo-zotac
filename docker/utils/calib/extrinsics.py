@@ -50,8 +50,8 @@ def cmd_imu_from_lidar(args):
     T_li = args.t_lidar_imu or cc.glim_T_lidar_imu(args.glim_config)
     T_bi = T_bl @ cc.tum_to_mat(T_li)
     print(f"T_lidar_imu used: {cc.fmt_tum(T_li)}")
-    print("imu.xacro (joint base2imu has no extra offsets):")
-    print(cc.fmt_xyz_rpy(T_bi, "b2i"))
+    print("imu.xacro (CAD frame):")
+    print(cc.fmt_cad(T_bi, "imu", "imu_yaw"))
 
 
 def read_tf_static(bag):

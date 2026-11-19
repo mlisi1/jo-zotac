@@ -1,5 +1,5 @@
 # Full recording: sensors with RAW images + localization + nav2 diagnostics.
-# Topics: 131. Usage (see docker/utils/recordings.bash):
+# Topics: 133. Usage (see docker/utils/recordings.bash):
 #   ros2 run rosbag2_transport recorder --ros-args \
 #     --params-file /home/ros/utils/recording/record_all.yaml \
 #     -p storage.uri:=/home/ros/bags/<timestamp>_<name>
@@ -100,6 +100,8 @@
         - /accel/filtered
         - /glim_ros/odom
         - /glim_ros/odom_corrected
+        - /glim_ros/odometry/local     # EKF input (glim_ros2@dev)
+        - /glim_ros/odometry/global
         - /visodom/odom
         - /visodom/odom_info_lite
         - /set_pose

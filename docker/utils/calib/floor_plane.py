@@ -11,7 +11,8 @@ It fits a plane to the floor points of the accumulated scans (RANSAC + SVD
 refinement) and prints:
   - LiDAR roll/pitch relative to the floor (URDF rpy convention)
   - LiDAR origin height above the floor
-  - the resulting base2lidar joint values (b2l_R, b2l_P, b2l_z) for velodyne.xacro
+  - the matching velodyne.xacro values: lidar_cad_z (CAD z = height above the
+    floor) and the roll/pitch for the base2lidar joint rpy, next to the URDF's
 
 Yaw cannot be observed from the floor; get it from the straight-driving test
 described in CALIBRATION.md.
@@ -89,15 +90,23 @@ def main():
     ap.add_argument("--skip", type=float, default=1.0, help="seconds to skip at the start of the bag")
     ap.add_argument("--min-range", type=float, default=1.0, help="ignore points closer than this [m]")
     ap.add_argument("--max-range", type=float, default=10.0, help="ignore points farther than this [m]")
-    ap.add_argument("--expected-height", type=float, default=0.973,
-                    help="rough LiDAR height above the floor [m] (URDF: 0.373 + 0.600); only points within "
-                         "--window of this are floor candidates, so desks/benches are not mistaken for the floor")
+    ap.add_argument("--expected-height", type=float, default=None,
+                    help="rough LiDAR height above the floor [m] (default: from the URDF, base_footprint -> "
+                         "velodyne); only points within --window of this are floor candidates, so desks/benches "
+                         "are not mistaken for the floor")
     ap.add_argument("--window", type=float, default=0.3, help="+/- band around -expected-height [m]")
     ap.add_argument("--thresh", type=float, default=0.03, help="RANSAC inlier distance [m]")
-    ap.add_argument("--base-height", type=float, default=0.373,
-                    help="base_link height above the floor [m] (URDF: chassis_height + 0.1 = 0.373)")
     ap.add_argument("--out", default=None, help="output folder (default: calibration/runs/...)")
     args = ap.parse_args()
+
+    # URDF: base_footprint is on the floor, velodyne is the VLP-16 optical centre
+    joints = cc.urdf_joints()
+    T_base_lidar = cc.urdf_T(joints, "base_link", "velodyne")
+    T_base_foot = cc.urdf_T(joints, "base_link", "base_footprint")
+    urdf_height = float(T_base_lidar[2, 3] - T_base_foot[2, 3])
+    urdf_roll, urdf_pitch, _ = cc.mat_to_xyz_rpy(T_base_lidar)[1]
+    if args.expected_height is None:
+        args.expected_height = urdf_height
 
     bag = resolve_bag(args.bag)
     pts, n_used = read_clouds(bag, args.topic, args.scans, args.skip)
@@ -126,11 +135,10 @@ def main():
     print(f"LiDAR pitch : {math.degrees(pitch):+.2f} deg  ({pitch:+.4f} rad)")
     print(f"LiDAR origin height above floor: {height:.3f} m")
     print()
-    print("velodyne.xacro (joint base2lidar adds lidar_len_h/2 = 0.036 to b2l_z):")
-    print(f"  b2l_R = {roll:.4f}")
-    print(f"  b2l_P = {pitch:.4f}")
-    print(f"  b2l_z = {height - args.base_height - 0.036:.4f}   "
-          f"(origin {height - args.base_height:.3f} m above base_link, base_link {args.base_height:.3f} m above floor)")
+    print("velodyne.xacro (CAD frame: z = height above the floor)        measured   URDF now")
+    print(f"  lidar_cad_z                                               {height:8.4f}   {urdf_height:8.4f}")
+    print(f"  base2lidar rpy roll                                       {roll:+8.4f}   {urdf_roll:+8.4f}")
+    print(f"  base2lidar rpy pitch                                      {pitch:+8.4f}   {urdf_pitch:+8.4f}")
     if inl.sum() < 0.2 * len(cand) or np.percentile(resid, 95) > 0.8 * args.thresh * 1.25:
         print("\nWARNING: weak plane fit (few inliers or large residual) -- floor not flat/open enough?")
 
@@ -138,7 +146,9 @@ def main():
               "residual_mm": {"mean": float(resid.mean() * 1000), "p95": float(np.percentile(resid, 95) * 1000)},
               "floor_normal_lidar": n, "lidar_roll_rad": roll, "lidar_pitch_rad": pitch,
               "lidar_height_above_floor_m": height,
-              "urdf": {"b2l_R": roll, "b2l_P": pitch, "b2l_z": height - args.base_height - 0.036}}
+              "urdf": {"lidar_cad_z": height, "base2lidar_roll": roll, "base2lidar_pitch": pitch},
+              "urdf_current": {"lidar_cad_z": urdf_height, "base2lidar_roll": float(urdf_roll),
+                               "base2lidar_pitch": float(urdf_pitch)}}
     run = cc.new_run_dir("floor", bag, args.out)
     cc.save_run(run, "floor_plane", args, result, bag)
 
