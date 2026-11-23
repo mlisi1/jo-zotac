@@ -244,7 +244,7 @@ Visualization Manager:
       Depth: 5
       Durability Policy: Volatile
       History Policy: Keep Last
-      Reliability Policy: Reliable
+      Reliability Policy: Best Effort
       Value: /back_camera/camera/depth/color/points
     Use Fixed Frame: true
     Use rainbow: true
@@ -277,7 +277,7 @@ Visualization Manager:
       Depth: 5
       Durability Policy: Volatile
       History Policy: Keep Last
-      Reliability Policy: Reliable
+      Reliability Policy: Best Effort
       Value: /front_camera/camera/depth/color/points
     Use Fixed Frame: true
     Use rainbow: true
@@ -412,7 +412,7 @@ Visualization Manager:
       Depth: 5
       Durability Policy: Volatile
       History Policy: Keep Last
-      Reliability Policy: Reliable
+      Reliability Policy: Best Effort
       Value: /front_camera/camera/color/image_raw
     Value: true
     Visibility:
