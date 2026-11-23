@@ -11,9 +11,6 @@ ok()   { echo "  ${G}OK${N}    $*"; }
 fail() { echo "  ${R}FAIL${N}  $*"; FAILS=$((FAILS + 1)); }
 info() { echo "  ${Y}--${N}    $*"; }
 
-# Serial numbers of the cameras, as in jo_bringup.launch.py
-declare -A CAM=([318122300396]=front [327522300913]=back)
-
 # Walks up from a sysfs path to the USB device that owns it, prints its directory
 usb_dev_of() {
     local p; p=$(readlink -f "$1")
@@ -55,20 +52,22 @@ for d in /sys/bus/usb/devices/*; do
 done
 [ ${#bad[@]} = 0 ] && ok "all USB devices: on" || fail "autosuspend still enabled on: ${bad[*]}"
 
-echo "${B}RealSense D456 (8086:0b5c)${N}"
-declare -A seen=()
+echo "${B}RealSense D456 (8086:0b5c), 2 expected${N}"
+# The USB serial is not the RealSense serial of jo_bringup.launch.py (front 318122300396, back
+# 327522300913), so sysfs can't tell front from back: `rs-enumerate-devices -s` in the container can.
+n=0
 for d in /sys/bus/usb/devices/*; do
     [ "$(cat "$d/idVendor" 2>/dev/null):$(cat "$d/idProduct" 2>/dev/null)" = 8086:0b5c ] || continue
-    sn=$(cat "$d/serial" 2>/dev/null); name=${CAM[$sn]:-unknown}; seen[$name]=1
+    n=$((n + 1))
     speed=$(cat "$d/speed" 2>/dev/null); lpm=$(cat "$d/port/usb3_lpm_permit" 2>/dev/null)
     u1=$(cat "$d/power/usb3_hardware_lpm_u1" 2>/dev/null); u2=$(cat "$d/power/usb3_hardware_lpm_u2" 2>/dev/null)
-    tag="$name camera ($sn, $(basename "$d"))"
+    tag="camera at $(basename "$d") (USB serial $(cat "$d/serial" 2>/dev/null))"
     if [ "${speed:-0}" -ge 5000 ] 2>/dev/null; then ok "$tag on USB3 (${speed} Mb/s)"
     else fail "$tag on USB ${speed:-?} Mb/s: not USB3 (cable/port), the streams will not fit"; fi
     [ "$lpm" = 0 ] && ok "$tag usb3_lpm_permit = 0 (U1 ${u1:-?}, U2 ${u2:-?})" \
                    || fail "$tag usb3_lpm_permit = ${lpm:-?} (expected 0; U1 ${u1:-?}, U2 ${u2:-?})"
 done
-for name in front back; do [ -n "${seen[$name]}" ] || fail "$name camera not detected on USB"; done
+[ $n -ge 2 ] && ok "$n cameras on USB" || fail "$n of 2 cameras on USB (cable, port or power of the missing one)"
 
 echo "${B}CPU idle states (jo-cpu-idle.service)${N}"
 st=$(systemctl is-enabled jo-cpu-idle.service 2>/dev/null); ac=$(systemctl is-active jo-cpu-idle.service 2>/dev/null)
