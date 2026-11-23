@@ -51,6 +51,9 @@ services:
       - CYCLONEDDS_URI=file:///home/ros/utils/cyclonedds.xml
       - XAUTHORITY=/tmp/.Xauthority
       - RCUTILS_COLORIZED_OUTPUT=1
+      # `docker compose exec` sets TERM=xterm (8 colours) when the container has none, and the DendROS
+      # TUI then fails to start (colour 172 > COLORS-1) and silently falls back to classic output
+      - TERM=xterm-256color
     group_add:
       - dialout
 
