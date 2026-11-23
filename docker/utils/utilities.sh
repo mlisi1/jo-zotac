@@ -24,3 +24,9 @@ alias open_vslam='bash /home/ros/utils/open_vslam_map.sh'
 alias health='ros2 run testudo testudo watch'
 alias health_headless='ros2 run testudo testudo watch --headless'
 
+
+# Prompt: magenta and tagged [jo-zotac], so a container shell can't be mistaken for the host's
+# (network_mode: host gives the container the host's hostname, and Ubuntu's default prompt is green there too)
+if [[ $- == *i* ]]; then
+    PS1='\[\e]0;[jo-zotac] \u@\h: \w\a\]\[\033[01;35m\][jo-zotac] \u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+fi
