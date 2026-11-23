@@ -191,6 +191,11 @@
 
     # ============= IMAGE TRANSPORT CONFIGURATION PARAMETERS =============
     #Image transport parameters
+    # Unaligned depth compressed with RVL, not PNG: this 848x480 depth (no holes, fine noise) costs ~13 ms per
+    # frame in PNG on a fast CPU, in the camera's frame thread, and while it was subscribed (record_compressed)
+    # aligned depth and visual odometry fell from ~29 to ~8 Hz. RVL: 29 Hz while recording (robot, 2026-11-23).
+    # Image_transport decodes it transparently. The leading dot is part of the name (topic minus the node namespace).
+    .camera.depth.image_rect_raw.compressedDepth.format: rvl
     camera:
       # Aligned depth: only the transports anything uses (no theora/zstd/compressed topics)
       aligned_depth_to_color:
