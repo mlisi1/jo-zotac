@@ -188,5 +188,10 @@ RUN if [ -n "${GLIM_ROS_COMMIT}" ]; then \
 RUN mkdir -p ~/.config/dendROS \
  && echo '[ -f /home/ros/utils/utilities.sh ] && source /home/ros/utils/utilities.sh' >> ~/.bashrc
 
+# Clipboard for the DendROS TUI's copy: VTE terminals (Terminator) ignore OSC 52, so it needs xclip,
+# which copies to the container's X display ($DISPLAY, the laptop's with ssh -X). Last layer on
+# purpose: adding it doesn't rebuild the layers above.
+RUN sudo apt-get update && sudo apt-get install -y --no-install-recommends xclip \
+ && sudo rm -rf /var/lib/apt/lists/*
 
 ENTRYPOINT ["/entrypoint.sh"]
