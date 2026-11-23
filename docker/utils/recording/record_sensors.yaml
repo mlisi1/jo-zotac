@@ -1,5 +1,5 @@
 # Sensors only (for offline reprocessing / calibration): compressed images, no nav/localization.
-# Topics: 77. Usage (see docker/utils/recordings.bash):
+# Topics: 91. Usage (see docker/utils/recordings.bash):
 #   ros2 run rosbag2_transport recorder --ros-args \
 #     --params-file /home/ros/utils/recording/record_sensors.yaml \
 #     -p storage.uri:=/home/ros/bags/<timestamp>_<name>
@@ -91,6 +91,21 @@
         # --- Static TF / description (needed to replay GLIM and calibrate) ---
         - /tf_static
         - /robot_description
+        # --- Testudo (topic health, `health` / `health_headless`), all DiagnosticArray ---
+        - /testudo/overall
+        - /testudo/faults
+        - /testudo/nodes
+        - /testudo/vitals
+        - /testudo/localization
+        - /testudo/imu
+        - /testudo/gnss
+        - /testudo/image_stream
+        - /testudo/point_stream
+        - /testudo/velocity_command
+        - /testudo/costmap
+        - /testudo/actions
+        - /testudo/bt_log
+        - /testudo/tf_watch
       include_unpublished_topics: false
       disable_keyboard_controls: true
       qos_profile_overrides_path: "/home/ros/utils/recording/qos_overrides.yaml"

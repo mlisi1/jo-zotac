@@ -1,5 +1,5 @@
 # Full recording: sensors with RAW images + localization + nav2 diagnostics.
-# Topics: 140. Usage (see docker/utils/recordings.bash):
+# Topics: 154. Usage (see docker/utils/recordings.bash):
 #   ros2 run rosbag2_transport recorder --ros-args \
 #     --params-file /home/ros/utils/recording/record_all.yaml \
 #     -p storage.uri:=/home/ros/bags/<timestamp>_<name>
@@ -96,6 +96,21 @@
         - /diagnostics
         - /rosout
         - /parameter_events   # runtime parameter changes
+        # --- Testudo (topic health, `health` / `health_headless`), all DiagnosticArray ---
+        - /testudo/overall
+        - /testudo/faults
+        - /testudo/nodes
+        - /testudo/vitals
+        - /testudo/localization
+        - /testudo/imu
+        - /testudo/gnss
+        - /testudo/image_stream
+        - /testudo/point_stream
+        - /testudo/velocity_command
+        - /testudo/costmap
+        - /testudo/actions
+        - /testudo/bt_log
+        - /testudo/tf_watch
         # --- Localization outputs ---
         - /odometry/local
         - /odometry/filtered     # EKF output in local mode (localization.launch.py)
