@@ -1,5 +1,7 @@
 saved_maps/*
+!saved_maps/.gitkeep
 bags/*
+!bags/.gitkeep
 .env
 *.zip
 *.sha256    

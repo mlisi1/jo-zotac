@@ -14,6 +14,10 @@ save_map() {
     local name="$1" dest_dir="/saved_maps" ros2_bin
     ros2_bin="$(type -P ros2)"   # the executable: `ros2` is DendROS's shell function
     mkdir -p "$dest_dir"
+    if [ ! -w "$dest_dir" ]; then
+        echo "Error: $dest_dir is not writable ($(stat -c '%U:%G' "$dest_dir")). On the host: sudo chown \$USER: <repo>/saved_maps"
+        return 1
+    fi
 
     if timeout 8 "$ros2_bin" service type /glim_ros/save_map >/dev/null 2>&1; then
         local out path
