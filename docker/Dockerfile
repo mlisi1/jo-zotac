@@ -125,7 +125,7 @@ RUN cd src && git clone --branch ros2 https://github.com/mlisi1/Xsens_MTi_ROS_Dr
 # GLIM: koide3/glim >= 1a197c9 is needed by glim_ros2@dev (contains the a9be365 GTSAM 4.3
 # ImuFactor fix, koide3/glim#306). glim_ros2: mlisi1 fork, branch dev (pinned commit).
 ARG GLIM_REF=1a197c999e4865f5cab7c9cd25474128413ebbca
-ARG GLIM_ROS_REF=3b893cc
+ARG GLIM_ROS_REF=59c9260
 RUN mkdir src/glim && cd src/glim && git init -q \
     && git remote add origin https://github.com/koide3/glim.git \
     && git fetch -q --depth 1 origin ${GLIM_REF} && git checkout -q FETCH_HEAD
