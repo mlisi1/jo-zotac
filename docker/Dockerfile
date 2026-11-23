@@ -166,10 +166,13 @@ RUN git clone -q --depth 1 --branch ${DENDROS_VERSION} https://github.com/mlisi1
  && bash /tmp/DendROS/install.sh -y \
  && sudo rm -rf /tmp/DendROS
 
-# Testudo (topic health), pinned to a release
-ARG TESTUDO_VERSION=1.0.0
+# Testudo (topic health). TESTUDO_VERSION: a tag, branch or commit. For now a commit on dev (the fixes
+# from the first robot bags, after 1.0.0); back to a release tag once dev is merged into main and tagged.
+# A commit rather than "dev": the layer is cached by this value, so a branch name never picks up new commits.
+ARG TESTUDO_VERSION=01a81ed
 RUN pip install --user --break-system-packages "textual>=6" \
- && git clone -q --depth 1 --branch ${TESTUDO_VERSION} https://github.com/mlisi1/testudo.git src/testudo \
+ && git clone -q https://github.com/mlisi1/testudo.git src/testudo \
+ && git -C src/testudo checkout -q ${TESTUDO_VERSION} \
  && source /opt/ros/jazzy/setup.bash \
  && colcon build --packages-select testudo
 
