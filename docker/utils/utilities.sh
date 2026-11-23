@@ -32,10 +32,20 @@ if [[ $- == *i* ]]; then
 fi
 
 # Heading alignment for GPS navigation (jo_navigation heading_alignment_node): with full_gps_navigation
-# up and BEFORE the mission, drives straight 8 m (Enter to start, Enter to apply), measures the GPS
-# course vs GLIM's heading and gives navsat the rotation. The real ros2 binary, not DendROS's wrapper:
-# the node reads Enter from the terminal.
+# up and BEFORE the mission, drives straight (Enter to start, Enter to apply), measures the GPS course
+# vs GLIM's heading and gives navsat the rotation.
+#   heading_align            default distance (heading_alignment.yaml, 10 m)
+#   heading_align 5          drive 5 m
+#   heading_align 5 -p calib_drive_speed_mps:=0.5    distance + any other ros-args
+# The real ros2 binary, not DendROS's wrapper: the node reads Enter from the terminal.
 heading_align() {
+    local extra=()
+    if [[ $# -gt 0 && "$1" =~ ^[0-9]+([.][0-9]+)?$ ]]; then
+        local d="$1"; [[ "$d" == *.* ]] || d="$d.0"    # a double: an int is rejected by the parameter
+        extra=(-p "calib_distance_m:=$d")
+        shift
+    fi
     "$(type -P ros2)" run jo_navigation heading_alignment_node.py --ros-args \
-        --params-file /home/ros/install/jo_navigation/share/jo_navigation/config/heading_alignment.yaml "$@"
+        --params-file /home/ros/install/jo_navigation/share/jo_navigation/config/heading_alignment.yaml \
+        "${extra[@]}" "$@"
 }
