@@ -18,11 +18,11 @@ alias extract_videos='bash /home/ros/utils/extract_camera_videos.sh'
 alias export_vslam='bash /home/ros/utils/export_vslam_map.sh'
 alias open_vslam='bash /home/ros/utils/open_vslam_map.sh'
 
-# Topic health (Testudo), default config: every topic is monitored, nothing is declared. A robot
-# config (thresholds, declared topics) comes after an on-board run. health_headless: no TUI,
-# results on /testudo/overall and /testudo/<plugin> (scripts, remote checks).
-alias health='ros2 run testudo testudo watch'
-alias health_headless='ros2 run testudo testudo watch --headless'
+# Topic health (Testudo) with the robot config jo_bringup/config/testudo.yaml (needs Testudo >= ef154f0;
+# thresholds from the 2026-11-23 field bags, every other topic monitored at the defaults). health_headless:
+# no TUI, results on /testudo/overall and /testudo/<plugin> (scripts, remote checks).
+alias health='ros2 run testudo testudo watch -c /home/ros/src/jo_bringup/config/testudo.yaml'
+alias health_headless='ros2 run testudo testudo watch --headless -c /home/ros/src/jo_bringup/config/testudo.yaml'
 
 
 # Prompt: magenta and tagged [jo-zotac], so a container shell can't be mistaken for the host's

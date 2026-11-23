@@ -1,0 +1,28 @@
+# Testudo config for Jo (the `health` / `health_headless` aliases pass it with -c). Needs Testudo >= ef154f0
+# (node_profiling.nodes). Every section merges over Testudo's defaults: only what differs on this robot is here.
+# Numbers from the 2026-11-23 field bags (20261123_135950 / 140348_new_stack_validation, full_gps_navigation).
+
+node_profiling:
+  nodes:
+    /glim_ros:                 # its memory grows with the map, which Testudo can't tell from a leak
+      thresholds:
+        memory_mb: {warn: 4000}            # ~0.65-1 GB seen in a few minutes; a long session's map is larger
+        memory_slope_mb_per_min: {warn: null}
+        cpu_percent: {warn: 300}           # ~160 % while mapping
+    /visodom/rgbd_odometry:
+      thresholds:
+        cpu_percent: {warn: 300}           # 150-180 % normal
+
+topics:
+  nav_msgs/msg/Odometry:
+    - name: /odometry/gps                  # navsat output, map frame: trace 3-93 m^2 with a float/single fix
+      thresholds: {position_covariance_trace: {warn: 100}}
+    - name: /odometry/global               # GPS-fused map EKF: trace 1-6 m^2 seen
+      thresholds: {position_covariance_trace: {warn: 25}}
+
+  sensor_msgs/msg/Imu:
+    - name: /imu/data
+      # The Xsens driver publishes all-zero covariances (orientation_stddev etc. 0 in xsens_mti_node.yaml).
+      # Known and harmless now: the EKFs fuse only its yaw rate. Hidden rather than a permanent WARN.
+      codes:
+        IMU-008: ok
