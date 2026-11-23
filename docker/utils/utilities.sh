@@ -30,3 +30,12 @@ alias health_headless='ros2 run testudo testudo watch --headless'
 if [[ $- == *i* ]]; then
     PS1='\[\e]0;[jo-zotac] \u@\h: \w\a\]\[\033[01;35m\][jo-zotac] \u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
 fi
+
+# Heading alignment for GPS navigation (jo_navigation heading_alignment_node): with full_gps_navigation
+# up and BEFORE the mission, drives straight 8 m (Enter to start, Enter to apply), measures the GPS
+# course vs GLIM's heading and gives navsat the rotation. The real ros2 binary, not DendROS's wrapper:
+# the node reads Enter from the terminal.
+heading_align() {
+    "$(type -P ros2)" run jo_navigation heading_alignment_node.py --ros-args \
+        --params-file /home/ros/install/jo_navigation/share/jo_navigation/config/heading_alignment.yaml "$@"
+}

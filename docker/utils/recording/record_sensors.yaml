@@ -1,5 +1,5 @@
 # Sensors only (for offline reprocessing / calibration): compressed images, no nav/localization.
-# Topics: 91. Usage (see docker/utils/recordings.bash):
+# Topics: 94. Usage (see docker/utils/recordings.bash):
 #   ros2 run rosbag2_transport recorder --ros-args \
 #     --params-file /home/ros/utils/recording/record_sensors.yaml \
 #     -p storage.uri:=/home/ros/bags/<timestamp>_<name>
@@ -91,6 +91,10 @@
         # --- Static TF / description (needed to replay GLIM and calibrate) ---
         - /tf_static
         - /robot_description
+        # --- Heading alignment (jo_navigation heading_alignment_node, `heading_align`) ---
+        - /heading_alignment/status            # std_msgs/String, latched: INIT ... READY / FAILED: reason
+        - /heading_alignment/ready             # std_msgs/Bool, latched: datum applied
+        - /heading_alignment_node/pending_confirmation   # std_msgs/String, latched: the question asked
         # --- Testudo (topic health, `health` / `health_headless`), all DiagnosticArray ---
         - /testudo/overall
         - /testudo/faults

@@ -1,5 +1,5 @@
 # Full recording: sensors with RAW images + localization + nav2 diagnostics.
-# Topics: 154. Usage (see docker/utils/recordings.bash):
+# Topics: 157. Usage (see docker/utils/recordings.bash):
 #   ros2 run rosbag2_transport recorder --ros-args \
 #     --params-file /home/ros/utils/recording/record_all.yaml \
 #     -p storage.uri:=/home/ros/bags/<timestamp>_<name>
@@ -96,6 +96,10 @@
         - /diagnostics
         - /rosout
         - /parameter_events   # runtime parameter changes
+        # --- Heading alignment (jo_navigation heading_alignment_node, `heading_align`) ---
+        - /heading_alignment/status            # std_msgs/String, latched: INIT ... READY / FAILED: reason
+        - /heading_alignment/ready             # std_msgs/Bool, latched: datum applied
+        - /heading_alignment_node/pending_confirmation   # std_msgs/String, latched: the question asked
         # --- Testudo (topic health, `health` / `health_headless`), all DiagnosticArray ---
         - /testudo/overall
         - /testudo/faults

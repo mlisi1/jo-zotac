@@ -262,6 +262,17 @@ groups:
         color: "bold mint"
       - word: "Interrupted by user"
         color: "bold violet"
+      # heading_alignment_node (INFO; its FAILED banner is ERROR, left alone)
+      - word: "[CALIBRATION_DRIVE]"
+        color: "@#FFFFFF"
+        inverted: true
+      - word: "correction [+-]\\S+ deg"     # in the INFO "Fit:" line (the summary is WARN)
+        regex: true
+        color: "@#FFFFFF"
+      - word: "HEADING ALIGNMENT COMPLETE"
+        color: "bold mint"
+      - word: "heading alignment applied"
+        color: "bold mint"
 
   system:
     color: "#8C8C8C"
