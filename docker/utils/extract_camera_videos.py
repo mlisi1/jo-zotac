@@ -184,17 +184,43 @@ def decode_zstd_depth_frame(data):
     return depth
 
 
+_RVL = None
+
+
+def _rvl_decompress(payload, n_pixels):
+    """RVL via the plugin's own codec (compressed_depth_image_transport::RvlCodec, through ctypes)."""
+    global _RVL
+    if _RVL is None:
+        import ctypes
+        lib = ctypes.CDLL("libcompressed_depth_image_transport.so")
+        codec = ctypes.create_string_buffer(256)  # RvlCodec holds a few pointers/ints: 256 bytes is plenty
+        lib._ZN32compressed_depth_image_transport8RvlCodecC1Ev(codec)
+        _RVL = (ctypes, lib._ZN32compressed_depth_image_transport8RvlCodec13DecompressRVLEPKhPti, codec)
+    ctypes, decompress, codec = _RVL
+    out = np.empty(n_pixels, dtype=np.uint16)
+    decompress(codec, ctypes.c_char_p(payload), out.ctypes.data_as(ctypes.c_void_p), ctypes.c_int(n_pixels))
+    return out
+
+
 def decode_compressed_depth_frame(data):
     """
     Standard compressed_depth_image_transport format: a 12-byte header
-    (format:int32, depthQuantA:float32, depthQuantB:float32) followed by a
-    PNG. Not present in the bags this tool was built against -- best effort.
+    (format:int32, depthQuantA:float32, depthQuantB:float32), then either a PNG
+    ("compressedDepth png") or, for "compressedDepth rvl" (the robot's unaligned depth since
+    2026-11-23), width and height as uint32 followed by the RVL stream. 16-bit depth only.
     """
-    png_bytes = bytes(data[12:])
-    arr = cv2.imdecode(np.frombuffer(png_bytes, dtype=np.uint8), cv2.IMREAD_UNCHANGED)
-    if arr is None:
-        raise RuntimeError("compressedDepth PNG decode failed")
-    return arr
+    body = bytes(data[12:])
+    if body[:8] == b"\x89PNG\r\n\x1a\n":
+        arr = cv2.imdecode(np.frombuffer(body, dtype=np.uint8), cv2.IMREAD_UNCHANGED)
+        if arr is None:
+            raise RuntimeError("compressedDepth PNG decode failed")
+        return arr
+    if len(body) < 8:
+        raise RuntimeError("compressedDepth frame too short")
+    width, height = struct.unpack("<II", body[:8])
+    if not (0 < width <= 8192 and 0 < height <= 8192):
+        raise RuntimeError(f"compressedDepth frame is neither PNG nor RVL (size {width}x{height})")
+    return _rvl_decompress(body[8:], width * height).reshape(height, width)
 
 
 def export_stream(bag_path, stream, out_path, depth_max_mm):
