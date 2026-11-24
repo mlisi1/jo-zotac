@@ -23,6 +23,7 @@ alias open_vslam='bash /home/ros/utils/open_vslam_map.sh'
 # no TUI, results on /testudo/overall and /testudo/<plugin> (scripts, remote checks).
 alias health='ros2 run testudo testudo watch -c /home/ros/src/jo_bringup/config/testudo.yaml'
 alias health_headless='ros2 run testudo testudo watch --headless -c /home/ros/src/jo_bringup/config/testudo.yaml'
+alias diagnostics='health'   # same as health: Testudo TUI with the robot config (never run `testudo watch` bare)
 
 
 # Prompt: magenta and tagged [jo-zotac], so a container shell can't be mistaken for the host's

@@ -167,10 +167,10 @@ RUN git clone -q --depth 1 --branch ${DENDROS_VERSION} https://github.com/mlisi1
  && sudo rm -rf /tmp/DendROS
 
 # Testudo (topic health). TESTUDO_VERSION: a tag, branch or commit. For now a commit on dev (the fixes
-# from the robot bags after 1.0.0; ef154f0 also reads node_profiling.nodes, which
+# from the robot bags after 1.0.0; >= ef154f0 reads node_profiling.nodes, which
 # jo_bringup/config/testudo.yaml uses); back to a release tag once dev is merged into main and tagged.
 # A commit rather than "dev": the layer is cached by this value, so a branch name never picks up new commits.
-ARG TESTUDO_VERSION=ef154f0
+ARG TESTUDO_VERSION=50b272e
 RUN pip install --user --break-system-packages "textual>=6" \
  && git clone -q https://github.com/mlisi1/testudo.git src/testudo \
  && git -C src/testudo checkout -q ${TESTUDO_VERSION} \
