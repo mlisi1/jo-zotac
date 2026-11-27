@@ -61,7 +61,8 @@ need `docker compose build`.
    docker compose exec jo-zotac bash      # every shell has the aliases below
    ```
    The GPU target is `CUDA_ARCHS=89` (RTX 3500 Ada); another GPU needs `CUDA_ARCHS` in `.env`.
-   `GLIM_ROS_COMMIT` in `.env` rebuilds only GLIM's ROS node at another glim_ros2 commit.
+   The forks built in the image (glim_ros2, ugv_sdk, bunker_ros2, Testudo) are pinned by build args in
+   `docker/Dockerfile`; their layers come last, so bumping one rebuilds only those (`--build-arg GLIM_ROS_REF=...`).
 
 ## Running
 

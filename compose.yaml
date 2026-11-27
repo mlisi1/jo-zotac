@@ -6,7 +6,6 @@ services:
       dockerfile: docker/Dockerfile
       args:
         CUDA_ARCHS: ${CUDA_ARCHS:-89}
-        GLIM_ROS_COMMIT: ${GLIM_ROS_COMMIT:-}
     privileged: true
     image: jo-zotac
     stdin_open: true
