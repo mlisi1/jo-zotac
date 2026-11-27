@@ -74,6 +74,9 @@ Everything starts from `jo_bringup.launch.py`; the aliases cover the usual combi
 | `full_gps_navigation` | the GPS variant: dual EKF + navsat + GPS Nav2 + RViz |
 | `bunker_only` | the base only: CAN up, `bunker_base` (CAN down when it stops) |
 
+With `full_navigation` up, `demo_circle <radius_m> <points>` (e.g. `demo_circle 5 15`) drives a circle
+of waypoints around the robot's current position (local navigation, `odom` frame).
+
 Start the base in its own terminal (`bunker_only`), separately from the stack, so it can be stopped
 on its own.
 

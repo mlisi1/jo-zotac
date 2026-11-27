@@ -54,3 +54,19 @@ heading_align() {
         --params-file /home/ros/install/jo_navigation/share/jo_navigation/config/heading_alignment.yaml \
         "${extra[@]}" "$@"
 }
+
+# Circle of waypoints for the LOCAL navigation (full_navigation up; jo_navigation demo_circle.py, Nav2
+# follow_waypoints in odom): the robot's current pose is the centre, the first waypoint is straight ahead on
+# the circumference, the others evenly spaced counter-clockwise, each oriented along the tangent.
+#   demo_circle 5 15         radius 5 m, 15 waypoints in total
+#   demo_circle 5 15 -p clockwise:=true -p close_loop:=true    + any other ros-args (close_loop: back to the 1st)
+demo_circle() {
+    if [[ $# -lt 2 || ! "$1" =~ ^[0-9]+([.][0-9]+)?$ || ! "$2" =~ ^[0-9]+$ ]]; then
+        echo "usage: demo_circle <radius_m> <points> [ros-args...]   e.g. demo_circle 5 15" >&2
+        return 1
+    fi
+    local r="$1"; [[ "$r" == *.* ]] || r="$r.0"    # a double: an int is rejected by the parameter
+    local n="$2"
+    shift 2
+    ros2 run jo_navigation demo_circle.py --ros-args -p "radius_m:=$r" -p "points:=$n" "$@"
+}
