@@ -1,5 +1,5 @@
 # Full recording: sensors with COMPRESSED images + localization + nav2 diagnostics.
-# Topics: 157. Usage (see docker/utils/recordings.bash):
+# Topics: 158. Usage (see docker/utils/recordings.bash):
 #   ros2 run rosbag2_transport recorder --ros-args \
 #     --params-file /home/ros/utils/recording/record_compressed.yaml \
 #     -p storage.uri:=/home/ros/bags/<timestamp>_<name>
@@ -30,6 +30,7 @@
         # --- Bunker base ---
         - /odom               # track odometry (bunker_base)
         - /bunker_status      # motors, battery, errors
+        - /bunker_rc_state    # RC switches and sticks (bunker_base)
         # --- GNSS / RTK ---
         - /gnss
         - /gnss_pose

@@ -223,8 +223,8 @@ def generate_launch_description():
     bunker = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(bunker_launch),   
         launch_arguments={
-            'odom_frame': 'none',
-            'base_frame': 'none2',
+            # /odom in odom -> base_link, no TF: the EKF owns odom -> base_link (mlisi1/bunker_ros2 dev)
+            'publish_tf': 'false',
         }.items(),       
         condition=bunker_condition
     )

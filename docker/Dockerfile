@@ -194,8 +194,19 @@ RUN mkdir -p ~/.config/dendROS \
 
 # Clipboard for the DendROS TUI's copy: VTE terminals (Terminator) ignore OSC 52, so it needs xclip,
 # which copies to the container's X display ($DISPLAY, the laptop's with ssh -X). Last layer on
-# purpose: adding it doesn't rebuild the layers above.
+# purpose (but for the Bunker layer below): adding it doesn't rebuild the layers above.
 RUN sudo apt-get update && sudo apt-get install -y --no-install-recommends xclip \
  && sudo rm -rf /var/lib/apt/lists/*
+
+# Bunker driver forks on top of the cached workspace (mlisi1/ugv_sdk and mlisi1/bunker_ros2, branch dev):
+# both drivers in /bunker_status, publish_tf (off), odometry covariance/stamps, /bunker_rc_state. A late layer
+# so bumping the refs rebuilds only these 3 packages; fold it into the clones above at the next full rebuild.
+ARG UGV_SDK_REF=71149ee
+ARG BUNKER_ROS2_REF=07db0df
+RUN cd src/ugv_sdk && git fetch -q origin && git checkout -q ${UGV_SDK_REF} \
+ && cd .. && rm -rf bunker_ros2 && git clone -q https://github.com/mlisi1/bunker_ros2.git \
+ && git -C bunker_ros2 checkout -q ${BUNKER_ROS2_REF} \
+ && cd ~ && source /opt/ros/jazzy/setup.bash \
+ && colcon build --packages-select ugv_sdk bunker_msgs bunker_base --cmake-args -DCMAKE_BUILD_TYPE=Release
 
 ENTRYPOINT ["/entrypoint.sh"]

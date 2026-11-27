@@ -85,6 +85,9 @@ groups:
         color: "bold mint"
       - word: "CAN interface down!"
         color: "bold violet"
+      - word: "Connected to the Bunker.*"     # bunker_base INFO (mlisi1/bunker_ros2 dev)
+        regex: true
+        color: "bold mint"
 
   glim:
     color: "#B48CFF"
