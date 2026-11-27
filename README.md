@@ -5,7 +5,7 @@ It contains the drivers for every sensor and the perception, localization and na
 
 | Part | What |
 |---|---|
-| Sensors | Velodyne VLP-16, Xsens MTi (IMU + GNSS, NTRIP client for RTK), two RealSense D455 (front / back) |
+| Sensors | Velodyne VLP-16, Xsens MTi (IMU + GNSS, NTRIP client for RTK), two RealSense D456 (front / back) |
 | Base | AgileX Bunker Pro over CAN (`bunker_base`) |
 | SLAM / localization | GLIM (LiDAR-inertial, GPU), robot_localization EKFs, navsat_transform, RTAB-Map visual odometry / SLAM |
 | Navigation | Nav2 (local and GPS) |
@@ -40,6 +40,7 @@ need `docker compose build`.
 3. Host settings, once, **on the host**:
    ```bash
    sudo bash host/install_host_rules.sh
+   bash host/check_host_rules.sh          # read-only check, exit code = failed checks
    ```
    Xsens FTDI latency 1 ms (otherwise IMU samples arrive in bursts), USB autosuspend and USB3 LPM off
    for the cameras, larger usbfs buffer, no deep CPU idle states. Without them the cameras drop
@@ -74,9 +75,6 @@ Everything starts from `jo_bringup.launch.py`; the aliases cover the usual combi
 | `full_gps_navigation` | the GPS variant: dual EKF + navsat + GPS Nav2 + RViz |
 | `bunker_only` | the base only: CAN up, `bunker_base` (CAN down when it stops) |
 
-With `full_navigation` up, `demo_circle <radius_m> <points>` (e.g. `demo_circle 5 15`) drives a circle
-of waypoints around the robot's current position (local navigation, `odom` frame).
-
 Start the base in its own terminal (`bunker_only`), separately from the stack, so it can be stopped
 on its own.
 
@@ -105,6 +103,25 @@ one. Without `rviz_config` the view follows the stacks launched. The views are i
 - `sensors`: LiDAR, camera clouds and images, TF (fixed frame `base_footprint`)
 - `navigation`: Nav2 (costmaps, plan, footprint), GLIM map, `/odometry/local` (fixed frame `map`)
 - `gps_navigation`: Nav2, `/odometry/global` and `/odometry/gps` (fixed frame `map`)
+
+## Missions
+
+**Local** (`full_navigation`, `odom` frame): RViz *2D Goal Pose*, or `demo_circle <radius_m> <points>`
+(e.g. `demo_circle 5 15`) for a circle of waypoints around the robot.
+
+**GPS** (`full_gps_navigation`):
+
+1. `heading_align [distance_m]` (default 10 m; 3-5 m worked in the 2026-11-24 field tests): Enter, the robot
+   drives straight, Enter applies the GPS heading to navsat. GLIM's `odom` frame has an arbitrary
+   heading, so this is needed **before every GPS mission**. No obstacle avoidance: keep the RC in hand.
+2. The mission (a yaml of named lat/lon points and a sequence, in `jo_navigation/missions/`):
+   ```bash
+   ros2 run jo_navigation send_gps_waypoints.py --ros-args \
+       -p mission_file:=/home/ros/src/jo_navigation/missions/<mission>.yaml -p mode:=auto   # or step
+   ```
+
+RTK needs the NTRIP client (`gnss:=true`, already in `full_gps_navigation`), internet and `.env`.
+Details in `jo_navigation`.
 
 ## Maps
 
@@ -136,10 +153,14 @@ settings are in `docker/utils/recording/*.yaml`: a new topic has to be added the
 - **DendROS**: `ros2` in the container is DendROS's wrapper. Launch output is grouped (SENS, BASE,
   GLIM, LOC, NAV, ...) by `jo_bringup/config/dendROS.yaml`; global settings (`dendros config`) are
   kept in `docker/utils/dendROS/`.
-- **Testudo**: `health` (TUI) or `health_headless` (results on `/testudo/*`) check rate, latency and
-  content of every topic.
+- **Testudo** (topic rate, latency, content): `diagnostics` / `health` (TUI) or `health_headless`
+  (results on `/testudo/*`), all with the robot config `jo_bringup/config/testudo.yaml`. Don't run
+  `testudo watch` without it.
 - **Calibration**: `docker/utils/calib/` (Allan variance, magnetometer check, floor plane, LiDAR-IMU
-  rotation, straight-drive yaw, extrinsics consistency). Results go to `calibration/runs/`.
+  rotation, straight-drive yaw, extrinsics consistency), on `record_calib` bags. Results go to
+  `calibration/runs/`.
+- `xsens_settings [--set-rotsensor R P Y]`: reads the MTi's stored settings (alignment, filter,
+  outputs); stop the Xsens driver first.
 - `no_gpu <cmd>` runs a GUI without the NVIDIA offload variables.
 
 ## Notes
@@ -147,4 +168,7 @@ settings are in `docker/utils/recording/*.yaml`: a new topic has to be added the
 - DDS is CycloneDDS with multicast for discovery only (`docker/utils/cyclonedds.xml`): multicast data
   saturated the LAN and delayed `/velodyne_points`.
 - The container runs with `pid: host`: `pkill -f` inside it also matches host processes.
-- The submodules follow the `dev` branch; `main` is the release branch.
+- The submodules follow the `dev` branch; `main` is the release branch. A submodule change is
+  committed (and pushed) there first, then the pointer bump here.
+- The Xsens is mounted rotated on the robot. Its axes are corrected in the device (RotSensor, set
+  with `xsens_settings`), so `/imu/data` is already in the robot frame (x forward, z up).
